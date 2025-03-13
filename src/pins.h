@@ -7,6 +7,7 @@
 #define BTN_TOP_PIN      2             // Active low
 #define BTN_TOP_PIN_NUM  GPIO_NUM_2    // For deep sleep wakeup
 #define AUX_PWR_PIN      3             // High to enable auxiliary power
+#define AUX_PWR_PIN_NUM  GPIO_NUM_3    // For deep sleep holding
 #define EXT_LED_PIN      4             // Active low
 #define DISP_RES_PIN     5
 #define DISP_CS_PIN      6             // SS, GLOBALLY-SET

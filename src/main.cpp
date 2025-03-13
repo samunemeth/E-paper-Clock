@@ -84,7 +84,7 @@ void displayRenderClaim(char* text);
 // Interrupt functions.
 void IRAM_ATTR intUpdateMode();
 void IRAM_ATTR intUserMode();
-void IRAM_ATTR intResetMode();
+void IRAM_ATTR intNormalMode();
 void IRAM_ATTR intLoopStop();
 
 // EEPROM related functions.
@@ -135,9 +135,9 @@ void setup() {
     if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_GPIO)) {
 
         // We can read the GPIO pins connected to the buttons.
-        // As the ESP reboots pretty fast, if the press is average length,
-        // it will still be pressed here.
-        bool update_btn_pressed = (digitalRead(OTA_SW_PIN) == LOW);
+        // As the ESP reboots pretty fast, if the press is average length, it will still be pressed here.
+        // If the last mode was the same, do not enter update mode again, as this was a button press to exit.
+        bool update_btn_pressed = (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE);
         bool user_btn_pressed = (digitalRead(BTN_TOP_PIN) == LOW);
 
         // Update mode has a higher priority, we will check that first.
@@ -224,11 +224,14 @@ void setup() {
 
         // Turn the update button into an additional reset button
         // This may be causing issues. For now, the interrupt will just be detached.
-        //attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intResetMode, FALLING);
-        detachInterrupt(digitalPinToInterrupt(OTA_SW_PIN));
+        attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intNormalMode, FALLING);
 
         // Draw to display
-        displayStartDraw();
+        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+            displayStartDraw(/*fast=*/ true);
+        #else
+            displayStartDraw();
+        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
         displayRenderClaim((char*)"UPDATE");
 
@@ -242,17 +245,21 @@ void setup() {
         for (;;) vTaskDelay(loop_tick_delay);
     }
 
+    // Display a start message
+    
     // If we are in RESET mode, the clock may not be set yet. Instead of a time, 
-    // we display a message.
+    // we display a message, or just clear the display.
     if (mode == RESET_MODE) {
-
-        #ifdef PREFER_FAST_REFRESH
+        
+        #if defined(PREFER_FAST_REFRESH)
             displayStartDraw(/*fast=*/ true);
         #else
             displayStartDraw();
         #endif /* PREFER_FAST_REFRESH */
-
-        displayRenderClaim((char*)"STARTING");
+        
+        #if defined(DISPLAY_START_MESSAGE)
+            displayRenderClaim((char*)"STARTING");
+        #endif /* DISPLAY_START_MESSAGE */
 
         displayEndDraw();
 
@@ -266,7 +273,11 @@ void setup() {
         formatTime();
 
         // Draw to display.
-        displayStartDraw();
+        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+            displayStartDraw(/*fast=*/ true);
+        #else
+            displayStartDraw();
+        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
         displayRenderBorders();
         displayRenderStatusBar();
@@ -311,27 +322,41 @@ void setup() {
     // Display seconds in the user mode.
     if (mode == USER_MODE) {
 
-        // Format time for display
-        getTime();
-        formatTime();
+        // If we are powering the display down, or not preferring fast refresh,
+        // a full refresh is required first.
+        #if defined(POWER_DOWN_DISPLAY) || !defined(PREFER_FAST_REFRESH)
 
-        // Print the time to the display
-        displayStartDraw();
+            // Format time for display
+            getTime();
+            formatTime();
+        
+            // Print the time to the display
+            displayStartDraw();
 
-        displayRenderBorders();
-        displayRenderStatusBar();
-        displayRenderTime();
-        displayRenderDate();
-    
-        displayEndDraw();
+            displayRenderBorders();
+            displayRenderStatusBar();
+            displayRenderTime();
+            displayRenderDate();
+        
+            displayEndDraw();
 
-        // Attach a loop stopping interrupt to the button.
-        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intLoopStop, FALLING);
-        loop_running = true;
+        #endif /* POWER_DOWN_DISPLAY || !PREFER_FAST_REFRESH */
+
+
         
         // Loop and print seconds
+        loop_running = true;
         uint8_t last_second = timeinfo.tm_sec;
         for (uint8_t i = 0; i < MAX_USER_SECONDS; i++) {
+
+            if (i == 2) {
+
+                // Attach a loop stopping interrupt to the button.
+                // This is done here to mitigate the issue of the user mode instantly quitting
+                // when the button is pressed for a bit too long.
+                attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intLoopStop, FALLING);
+
+            }
             
             // Format time for display
             getTime();
@@ -361,7 +386,6 @@ void setup() {
 
         // Detach the interrupt and attach the original one.
         detachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN));
-        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intUserMode, FALLING);
 
         // Clear the seconds with the final render
         goto finalRender;
@@ -381,14 +405,22 @@ void setup() {
 finalRender:
 
     // Print the time to the display
-    #ifdef PREFER_FAST_REFRESH
+    #if defined(PREFER_FAST_REFRESH)
 
-        // If we are in RESYNC or RESET or USER mode, we can do a fast refresh to save some time and power.
-        if (mode == RESYNC_MODE || mode == RESET_MODE || mode == USER_MODE) {
+        #if defined(POWER_DOWN_DISPLAY)
+
+            // If we are in RESYNC or RESET or USER mode, we can do a fast refresh to save some time and power.
+            if (mode == RESYNC_MODE || mode == RESET_MODE || mode == USER_MODE) {
+                displayStartDraw(/*fast=*/ true);
+            } else {
+                displayStartDraw(/*fast=*/ false);
+            }
+
+        #else
+
             displayStartDraw(/*fast=*/ true);
-        } else {
-            displayStartDraw(/*fast=*/ false);
-        }
+            
+        #endif /* POWER_DOWN_DISPLAY */
 
     #else
 
@@ -403,15 +435,19 @@ finalRender:
 
     displayEndDraw();
 
-    // Turn off the display and auxiliary power. We do not need them any more.
-    display.powerOff();
-    digitalWrite(AUX_PWR_PIN, LOW);
+    #if defined(POWER_DOWN_DISPLAY)
+    
+        // Turn off the display and auxiliary power. We do not need them any more.
+        display.powerOff();
+        digitalWrite(AUX_PWR_PIN, LOW);
+        
+    #endif /* POWER_DOWN_DISPLAY */
 
     // As the display refresh takes time, we have to get the time again.
     getTime();
 
     // Calculate the time for the wakeup, and enable th e timer. There is a margin included.
-    int64_t time_to_sleep = (60L - (int64_t)timeinfo.tm_sec) * 1000000L - ((int64_t)SLEEP_MARING * 1000L);
+    int64_t time_to_sleep = (60L - (int64_t)timeinfo.tm_sec) * 1000000L - ((int64_t)SLEEP_MARGIN * 1000L);
     esp_sleep_enable_timer_wakeup(time_to_sleep);
 
     // Disables the RTC FAST memory, that is not used in our case. This saves power.
@@ -421,6 +457,15 @@ finalRender:
     // We check witch one caused the wakeup at the start.
     esp_deep_sleep_enable_gpio_wakeup(1 << OTA_SW_PIN_NUM, ESP_GPIO_WAKEUP_GPIO_LOW);
     esp_deep_sleep_enable_gpio_wakeup(1 << BTN_TOP_PIN_NUM, ESP_GPIO_WAKEUP_GPIO_LOW);
+
+    #if !defined(POWER_DOWN_DISPLAY)
+        
+        // Keep the gpio states as is.
+        gpio_deep_sleep_hold_en();
+        gpio_hold_en(AUX_PWR_PIN_NUM);
+
+    #endif /* POWER_DOWN_DISPLAY */
+
 
     // Go into deep sleep.
     // Nothing is run after this.
@@ -545,44 +590,6 @@ void displayRenderClaim(char* text) {
 }
 
 
-/* 
-/// @brief Shows second until the second is equal to the last second value.
-/// @param last_second This will not be displayed, so that there is no delay.
-void showSecondsUntil(uint8_t last_second) {
-
-    // Make it Async?
-
-    // Save last second value
-    getTime();
-    uint8_t last = timeinfo.tm_sec;
-
-    // Wait until the minute, to be more accurate
-    while (timeinfo.tm_sec != last_second) {
-
-        // Update time
-        getTime();
-
-        // If we are on the same second, wait.
-        if (last == timeinfo.tm_sec) {
-            vTaskDelay(loop_tick_delay);
-            continue;
-        }
-        last = timeinfo.tm_sec;
-
-        // Draw second to the screen
-        displayStartDraw(false);
-        display.setPartialWindow(132, 20, 32, 16);
-
-        displayRenderSecond();
-
-        displayEndDraw();
-        
-    }
-
-}
-*/
-
-
 // --- Interrupt Functions ---
 
 void IRAM_ATTR intUpdateMode() {
@@ -605,10 +612,10 @@ void IRAM_ATTR intUserMode() {
 
 }
 
-void IRAM_ATTR intResetMode() {
+void IRAM_ATTR intNormalMode() {
 
     // Set mode to user, and save to the EEPROM.
-    writeModeEEPROM(RESET_MODE);
+    writeModeEEPROM(NORMAL_MODE);
 
     // Restart with the new mode in EEPROM.
     ESP.restart();
