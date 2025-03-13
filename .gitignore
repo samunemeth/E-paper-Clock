@@ -1,0 +1,4 @@
+.pio
+.vscode
+.git.old
+wifi_secret.h
