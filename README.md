@@ -1,7 +1,10 @@
 > [!IMPORTANT]
+> More features are hopefully coming soon!
+>
 > This repository is not even close to being finished.
 > I will try to include all the files and useful resources,
 > but there are a lot, so it will take time.
+
 
 # E-papper Clock 
 
@@ -12,9 +15,23 @@ This is an e-papper clock based on a *WeAct Studio 2.9" BW* display, and a custo
 The clock can connect to a local network to get the time hen powered on.
 After this, and internal timer is calibrated to the current timezone.
 The display is refreshed every minute. Between the refreshes, the *ESP32-C3*
-enters deep sleep to preserve battery power. At set hours, the clock
-will resync to a time server. It will also show the last resync.
+enters deep sleep to preserve battery power.
+
+At set hours, the clock
+will resync to a time server, and it will show the last resync.
 The clock can also monitor it's battery level.
+By pressing the update button, the display is kept awake. After a second press, or
+reset, it continues normal operation.
+Pressing the top button enables user mode, witch shows the seconds for a set
+amount of time, or until the user presses the button again.
+
+The settings can be configured easily. There is an option to power down
+the display when the *ESP* goes to deep sleep: `POWER_DOWN_DISPLAY`
+And an option to prefer fast refreshes where possible: `MAX_USER_SECONDS`
+
+Messages, and time intervals can also be customised without much hassle.
+First look at the settings file `settings.h`, and if you dont find anything there,
+use a search on the main part of the code.
 
 > [!NOTE]
 > I try to document the code as much as I can, but if you have any questions,
