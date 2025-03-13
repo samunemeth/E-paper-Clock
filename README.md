@@ -34,19 +34,20 @@ The compromises are not yet fully clear to me, further testing and investigation
   - ~~Show last sync time.~~
   - ~~Show custom page in update mode.~~
   - ~~Change delays to async ones, or sleeps.~~
-  - ~~Add GPIO wakeup to buttons. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#_CPPv433esp_deep_sleep_enable_gpio_wakeup8uint64_t33esp_deepsleep_gpio_wake_up_mode_t)*~~
+  - ~~Add GPIO wakeup to buttons.~~
+  - ~~Implement user mode~~
 
 **Implement**
-  - Implement user mode
+  - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Better fonts, for example *Roboto*.
   - Show wifi strength at last sync.
   - Calibrate the ADC a bit more.
-  - Detect low battery, stop operation.
+  - Detect low battery, stop operation. *(Critical battery mode)*
 
 **Test**
   - Test power consumption, and try to minimise it.
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
-  - Test if powering off the display is actually worth it. *See: [Holding IO in deep sleep](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#configuring-ios-deep-sleep-only).*
+  - Test if powering off the display is actually worth it. 
 
 **Document**
   - Document the font creation process.
@@ -62,14 +63,15 @@ The compromises are not yet fully clear to me, further testing and investigation
 
   - Purchase display: [AliExpress](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme).
   - Sleep modes on the *ESP32-C3*: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c3/api-reference/system/sleep_modes.html).
-  - This video showcasing the display and library: [Video](https://youtu.be/KZGjsC-JkR8?si=c3sMc7xT4hFs9A2L).
+  - Showcasing the display and library: [Video](https://youtu.be/KZGjsC-JkR8?si=c3sMc7xT4hFs9A2L).
     And the code they used: [GitHub](https://github.com/devtales-official/screen-test/tree/main/devtales_screentest_ep2).
   - Generating new fonts: [Adafruit Documentation](https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts).
   *(tl;dr: You pretty much must do this on linux.)*
   - How to remap global SPI ports: [Arduino Forum Thread](https://forum.arduino.cc/t/understanding-spi-pin-remapping-for-gxepd2-on-a-esp32-c3-mini/1065982).
   *(I looked 3 hours for this.)*
   - Advanced deep sleep wakeup functionality: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/deep-sleep-stub.html)
-  - Wakeup on the *ESP32-C3* with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1)
+  - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1)
+  - Holding pins in deep sleep: *[Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).*
 
 ## Other Uses, Future Updates
 
