@@ -39,10 +39,13 @@ The compromises are not yet fully clear to me, further testing and investigation
 
 **Implement**
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
+  - Skip resync if there are no wifi networks.
+  - More text on update mode.
   - Better fonts, for example *Roboto*.
   - Show wifi strength at last sync.
   - Calibrate the ADC a bit more.
-  - Detect low battery, stop operation. *(Critical battery mode)*
+  - Critical battery mode, stop operation.
+  - Manual time settings. *(This is hard to do btw.)*
 
 **Test**
   - Test power consumption, and try to minimise it.
