@@ -181,7 +181,7 @@ void setup() {
         getTime();
 
         // Check for all the times.
-        bool needs_resync = RESYNC_DEMO;
+        bool needs_resync = false;
         for (uint8_t i = 0; i < sizeof(resync_at) / sizeof(resync_at[0]); i++) {
             needs_resync = needs_resync || (timeinfo.tm_hour == resync_at[i]) && (timeinfo.tm_min == 0);
         }
