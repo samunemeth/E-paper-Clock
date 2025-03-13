@@ -2,6 +2,7 @@
 // --- General Settings ---
 
 #define LOOP_WAIT_TIME          20                             // The amount of time to wait im miliseconds per loop while waiting for something.
+#define MAX_USER_SECONDS        20                             // The maximum number of seconds to count out in USER mode.
 
 #define SNTP_1                  "0.pool.ntp.org"               // Primary SNTP server.
 #define SNTP_2                  "1.pool.ntp.org"               // Secondary SNTP server.

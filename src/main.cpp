@@ -58,6 +58,9 @@ char strf_last_sync_hour_buf[4];
 char strf_last_sync_minute_buf[4];
 char strf_battery_voltage_buf[8];
 
+// Loop status
+bool loop_running;
+
 
 // --- Function Declarations ---
 
@@ -82,6 +85,7 @@ void displayRenderClaim(char* text);
 void IRAM_ATTR intUpdateMode();
 void IRAM_ATTR intUserMode();
 void IRAM_ATTR intResetMode();
+void IRAM_ATTR intLoopStop();
 
 // EEPROM related functions.
 void readModeEEPROM();
@@ -219,7 +223,9 @@ void setup() {
         digitalWrite(EXT_LED_PIN, LOW);
 
         // Turn the update button into an additional reset button
-        attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intResetMode, FALLING);
+        // This may be causing issues. For now, the interrupt will just be detached.
+        //attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intResetMode, FALLING);
+        detachInterrupt(digitalPinToInterrupt(OTA_SW_PIN));
 
         // Draw to display
         displayStartDraw();
@@ -228,7 +234,9 @@ void setup() {
 
         displayEndDraw();
 
-        // TODO: Disable aux power
+        // Turn off the display and auxiliary power. We do not need them any more.
+        display.powerOff();
+        digitalWrite(AUX_PWR_PIN, LOW);
 
         // Block all other tasks.
         for (;;) vTaskDelay(loop_tick_delay);
@@ -285,7 +293,6 @@ void setup() {
         configureTimeZone();
 
         // Wait for WiFi to connect, and time to sync.
-        // TODO: Async wait?
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
@@ -301,9 +308,65 @@ void setup() {
 
     }
 
-    // Do something with the user mode here!
-    // TODO: User mode
-    if (mode == USER_MODE) {};
+    // Display seconds in the user mode.
+    if (mode == USER_MODE) {
+
+        // Format time for display
+        getTime();
+        formatTime();
+
+        // Print the time to the display
+        displayStartDraw();
+
+        displayRenderBorders();
+        displayRenderStatusBar();
+        displayRenderTime();
+        displayRenderDate();
+    
+        displayEndDraw();
+
+        // Attach a loop stopping interrupt to the button.
+        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intLoopStop, FALLING);
+        loop_running = true;
+        
+        // Loop and print seconds
+        uint8_t last_second = timeinfo.tm_sec;
+        for (uint8_t i = 0; i < MAX_USER_SECONDS; i++) {
+            
+            // Format time for display
+            getTime();
+            formatTime();
+            
+            // Print the time and seconds to the display
+            displayStartDraw(/*fast=*/ true);
+            
+            displayRenderBorders();
+            displayRenderStatusBar();
+            displayRenderTime();
+            displayRenderDate();
+            displayRenderSecond();
+            
+            displayEndDraw();
+
+            do {
+                getTime();
+                vTaskDelay(loop_tick_delay);
+            } while (timeinfo.tm_sec == last_second);
+            
+            last_second = timeinfo.tm_sec;
+
+            if (!loop_running) break;
+
+        }
+
+        // Detach the interrupt and attach the original one.
+        detachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN));
+        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intUserMode, FALLING);
+
+        // Clear the seconds with the final render
+        goto finalRender;
+
+    };
 
     // If we are really close to the minute, wait for it.
     // In other cases, we will just wake up before it.
@@ -315,11 +378,13 @@ void setup() {
     // Format time for display
     formatTime();
 
+finalRender:
+
     // Print the time to the display
     #ifdef PREFER_FAST_REFRESH
 
-        // If we are in RESYNC or RESET mode, we can do a fast refresh to save some time and power.
-        if (mode == RESYNC_MODE || mode == RESET_MODE) {
+        // If we are in RESYNC or RESET or USER mode, we can do a fast refresh to save some time and power.
+        if (mode == RESYNC_MODE || mode == RESET_MODE || mode == USER_MODE) {
             displayStartDraw(/*fast=*/ true);
         } else {
             displayStartDraw(/*fast=*/ false);
@@ -520,7 +585,6 @@ void showSecondsUntil(uint8_t last_second) {
 
 // --- Interrupt Functions ---
 
-/// @brief Called by an interrupt. Reboots into update mode.
 void IRAM_ATTR intUpdateMode() {
 
     // Set mode to update mode, and save to the EEPROM.
@@ -541,7 +605,6 @@ void IRAM_ATTR intUserMode() {
 
 }
 
-/// @brief Restart with and interrupt.
 void IRAM_ATTR intResetMode() {
 
     // Set mode to user, and save to the EEPROM.
@@ -549,6 +612,13 @@ void IRAM_ATTR intResetMode() {
 
     // Restart with the new mode in EEPROM.
     ESP.restart();
+
+}
+
+/// @brief Stops the current loop that the interrupt occurred in.
+void IRAM_ATTR intLoopStop() {
+
+    loop_running = false;
 
 }
 
@@ -561,8 +631,7 @@ void readModeEEPROM() {
     last_mode = EEPROM.read(1);
 
     // If the mode is invalid, set it to NULL mode.
-    // TODO: Better way to check this.
-    if (mode != NULL_MODE && mode != NORMAL_MODE && mode != UPDATE_MODE && mode != USER_MODE && mode != RESET_MODE && mode != RESYNC_MODE) {
+    if (mode != NORMAL_MODE && mode != UPDATE_MODE && mode != USER_MODE && mode != RESET_MODE && mode != RESYNC_MODE) {
         mode = NULL_MODE;
     }
 
