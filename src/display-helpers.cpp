@@ -59,7 +59,9 @@ void displayRenderBorders() {
 }
 
 /// @brief Renders the status bar on the top of the display.
-// TODO
+/// @param battery_voltage_buf Battery voltage in string format.
+/// @param last_sync_hour_buf Last sync hours in string format.
+/// @param last_sync_minute_buf Last sync minutes in string format.
 void displayRenderStatusBar(char* battery_voltage_buf, char* last_sync_hour_buf, char* last_sync_minute_buf) {
 
     display.setFont(&FreeMonoBold9pt7b);
@@ -72,7 +74,8 @@ void displayRenderStatusBar(char* battery_voltage_buf, char* last_sync_hour_buf,
 }
 
 /// @brief Renders the time to the center of the display.
-// TODO
+/// @param hour_buf Hours in string format.
+/// @param minute_buf Minutes in string format.
 void displayRenderTime(char* hour_buf, char* minute_buf) {
 
     display.setFont(&FreeMonoBold48pt7b);
@@ -83,7 +86,7 @@ void displayRenderTime(char* hour_buf, char* minute_buf) {
 }
 
 /// @brief Render the date to the bottom of the display.
-// TODO
+/// @param date_buf Date in string format.
 void displayRenderDate(char* date_buf) {
 
     display.setFont(&FreeMonoBold12pt7b);
@@ -92,7 +95,7 @@ void displayRenderDate(char* date_buf) {
 }
 
 /// @brief Render the seconds to the display over the large colon.
-// TODO
+/// @param seconds Seconds in intiger format.
 void displayRenderSecond(uint8_t seconds) {
 
     display.setFont(&FreeMonoBold12pt7b);
@@ -119,7 +122,8 @@ void displayRenderClaim(char* text) {
 
 }
 
-
+/// @brief Initialize the display.
+/// @param wipe If true, does an initial wipe.
 void displayInit(bool wipe) {
 
     display.init(115200, wipe, 2, false);
@@ -127,6 +131,7 @@ void displayInit(bool wipe) {
 
 }
 
+/// @brief Turns off the display.
 void displayOff() {
 
     display.powerOff();

@@ -1,8 +1,4 @@
 
-// --- Header Guard ---
-//#ifndef DISPLAY_HELPERS_h
-//#define DISPLAY_HELPERS_h
-
 // --- Libraries ---
 #include <GxEPD2_BW.h>
 #include <Arduino.h>
@@ -32,5 +28,3 @@ void displayRenderClaim(char* text);
 
 void displayInit(bool wipe);
 void displayOff();
-
-//#endif /* DISPLAY_HELPERS_h */
