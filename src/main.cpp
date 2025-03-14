@@ -5,21 +5,19 @@
 // --- Libraries ---
 #include <Arduino.h>
 #include <WiFi.h>
-#include <GxEPD2_BW.h>
 #include <SPI.h>
 #include <EEPROM.h>
 #include <time.h>
 
-// --- Fonts ---
-#include "Fonts/FreeMonoBold48pt7b.h"
-#include <Fonts/FreeMonoBold24pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold9pt7b.h>
 
 // --- Settings and Pins ---
 #include "settings.h"
 #include "pins.h"
 #include "wifi_secret.h"
+
+
+// --- Components ---
+#include "display-helpers.h"
 
 
 // --- Calculated Constants ---
@@ -35,9 +33,6 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 #define RESYNC_MODE 16
 
 // --- Global Variables ---
-
-// Objects
-GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=*/ DISP_CS_PIN, /*DC=*/ DISP_DC_PIN, /*RST=*/ DISP_RES_PIN, /*BUSY=*/ DISPLAY_BUSY_PIN));
 
 // EEPROM values
 #define EEPROM_SIZE 4
@@ -64,22 +59,6 @@ bool loop_running;
 
 // --- Function Declarations ---
 
-
-// Display related functions.
-void displayStartDraw(bool fast = false, bool full = true);
-void displayEndDraw();
-
-void displayCenterText(char* text, uint16_t x = (display.width() / 2), uint16_t y = (display.height() / 2), bool onlyCursor = false);
-
-void displayRenderBorders();
-void displayRenderStatusBar();
-void displayRenderTime();
-void displayRenderDate();
-void displayRenderSecond();
-void displayRenderFlag(char* text);
-void displayRenderClaim(char* text);
-
-/* void showSecondsUntil(uint8_t last_second = 59); */
 
 // Interrupt functions.
 void IRAM_ATTR intUpdateMode();
@@ -212,8 +191,7 @@ void setup() {
 
     // Initialize the display.
     // If we are in RESET mode, we have to wipe the screen.
-    display.init(115200, (mode == RESET_MODE), 2, false);
-    display.setRotation(3); // Landscape with the connector on the left
+    displayInit(mode == RESET_MODE);
 
     // If we are in update mode, we basically have to stall the processor.
     if (mode == UPDATE_MODE) {
@@ -238,7 +216,7 @@ void setup() {
         displayEndDraw();
 
         // Turn off the display and auxiliary power. We do not need them any more.
-        display.powerOff();
+        displayOff();
         digitalWrite(AUX_PWR_PIN, LOW);
 
         // Block all other tasks.
@@ -280,9 +258,9 @@ void setup() {
         #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
         displayRenderBorders();
-        displayRenderStatusBar();
-        displayRenderTime();
-        displayRenderDate();
+        displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+        displayRenderTime(strf_hour_buf, strf_minute_buf);
+        displayRenderDate(strf_date_buf);
 
         displayRenderFlag((char*)"RESYNC");
 
@@ -334,9 +312,9 @@ void setup() {
             displayStartDraw();
 
             displayRenderBorders();
-            displayRenderStatusBar();
-            displayRenderTime();
-            displayRenderDate();
+            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderTime(strf_hour_buf, strf_minute_buf);
+            displayRenderDate(strf_date_buf);
         
             displayEndDraw();
 
@@ -366,10 +344,10 @@ void setup() {
             displayStartDraw(/*fast=*/ true);
             
             displayRenderBorders();
-            displayRenderStatusBar();
-            displayRenderTime();
-            displayRenderDate();
-            displayRenderSecond();
+            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderTime(strf_hour_buf, strf_minute_buf);
+            displayRenderDate(strf_date_buf);
+            displayRenderSecond(timeinfo.tm_sec);
             
             displayEndDraw();
 
@@ -429,16 +407,16 @@ finalRender:
     #endif /* PREFER_FAST_REFRESH */
 
     displayRenderBorders();
-    displayRenderStatusBar();
-    displayRenderTime();
-    displayRenderDate();
+    displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+    displayRenderTime(strf_hour_buf, strf_minute_buf);
+    displayRenderDate(strf_date_buf);
 
     displayEndDraw();
 
     #if defined(POWER_DOWN_DISPLAY)
     
         // Turn off the display and auxiliary power. We do not need them any more.
-        display.powerOff();
+        displayOff();
         digitalWrite(AUX_PWR_PIN, LOW);
         
     #endif /* POWER_DOWN_DISPLAY */
@@ -479,115 +457,7 @@ void loop() {};
 // --- Function Definitions ---
 
 
-// --- Display Related Functions ---
 
-/// @brief Starts a new page to draw on.
-/// @param fast If true, does a partial refresh of the full window insted of a full refresh.
-/// @param full If true, a full windows refresh is selected. If false, the refresh style has to be manually set after this.
-void displayStartDraw(bool fast, bool full) {
-    
-    display.firstPage();
-    display.setTextColor(GxEPD_BLACK);
-    if (!full) return;
-    if (fast) {
-        display.setPartialWindow(0, 0, display.width(), display.height());
-    } else {
-        display.setFullWindow();
-    }
-
-}
-
-/// @brief Refreshes the display.
-void displayEndDraw() {
-
-    display.nextPage();
-
-}
-
-/// @brief Set the cursor, and print text to the display, such that the text is centered at the coordinates.
-/// @param text The text to print, or set the cursor for.
-/// @param x The X coordinate.
-/// @param y The Y coordinate.
-/// @param onlyCursor If true, the text will not be rendered, but the cursor will be positioned.
-void displayCenterText(char* text, uint16_t x, uint16_t y, bool onlyCursor) {
-
-    // Get bounding box of text.
-    int16_t tbx, tby; uint16_t tbw, tbh;
-    display.getTextBounds(text, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-    // Move cursor to the correct location.
-    display.setCursor(x - (tbw / 2) - tbx, y - (tbh / 2) - tby);
-    if (onlyCursor) return; // Skip printing text if only cursor is set.
-    display.print(text);
-
-}
-
-/// @brief Renders the visual borders of the screen.
-void displayRenderBorders() {
-
-    /*
-    display.drawRect(0, 12, display.width(), display.height() - 12, GxEPD_BLACK);
-    display.drawRect(1, 13, display.width() - 2, display.height() - 14, GxEPD_BLACK);
-    */
-
-}
-
-/// @brief Renders the status bar on the top of the display.
-void displayRenderStatusBar() {
-
-    display.setFont(&FreeMonoBold9pt7b);
-    displayCenterText(strf_battery_voltage_buf, 32, 6);
-
-    displayCenterText(strf_last_sync_hour_buf, 260, 6);
-    displayCenterText((char*)":", 273, 6);
-    displayCenterText(strf_last_sync_minute_buf, 286, 6);
-
-}
-
-/// @brief Renders the time to the center of the display.
-void displayRenderTime() {
-
-    display.setFont(&FreeMonoBold48pt7b);
-    displayCenterText(strf_hour_buf, 74, 62);
-    displayCenterText((char*)":", 148, 62);
-    displayCenterText(strf_minute_buf, 222, 62);
-
-}
-
-/// @brief Render the date to the bottom of the display.
-void displayRenderDate() {
-
-    display.setFont(&FreeMonoBold12pt7b);
-    displayCenterText(strf_date_buf, 148, 114);
-
-}
-
-/// @brief Render the seconds to the display over the large colon.
-void displayRenderSecond() {
-
-    display.setFont(&FreeMonoBold12pt7b);
-    displayCenterText((char*)"00", 148, 28, true);
-    display.printf("%02d", timeinfo.tm_sec);
-
-}
-
-/// @brief Renders text to the status bar area.
-/// @param text Text to reder. Recommended to be fully capitalised.
-void displayRenderFlag(char* text) {
-
-    display.setFont(&FreeMonoBold9pt7b);
-    displayCenterText(text, 148, 6);
-
-}
-
-/// @brief Renders large text to the center of the display.
-/// @param text Text to reder. Recommended to be fully capitalised.
-void displayRenderClaim(char* text) {
-
-    display.setFont(&FreeMonoBold24pt7b);
-    displayCenterText(text);
-
-}
 
 
 // --- Interrupt Functions ---
