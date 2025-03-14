@@ -49,18 +49,17 @@ use a search on the main part of the code.
 
 **Implement**
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
-  - Skip resync if there are no wifi networks.
+  - Skip resync if the wifi times out.
   - More text on update mode.
   - Better fonts, for example *Roboto*.
   - Show wifi strength at last sync.
   - Calibrate the ADC a bit more.
   - Critical battery mode, stop operation.
   - Manual time settings. *(This is hard to do btw.)*
-  - Fix accidental bugs.
+  - Look at "TODO" labeled commets.
   - Clean up `platformio.ini` file.
 
 **Test**
-  - Test power consumption, and try to minimise it.
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
   - Test if powering off the display is actually worth it. 
 
@@ -88,14 +87,14 @@ A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
 The project is currently uses the *8MD256* clock source over the default *RC* oscillator.
 This is presumably more accurate, but uses more power, and only lets the ESP enter a lower
-level of deep sleep. More info on [sleep levels](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
-The compromises are not yet fully clear to me, further testing and investigation is required.
+level of deep sleep. More info on [sub sleep levels](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
+The compromises are not yet fully clear to me, *further testing and investigation is required*.
 
 
 ## Useful Resources
 
-  - Library used for the display: [GxEPD2](https://github.com/ZinggJM/GxEPD2)
   - Purchase display: [AliExpress](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme).
+  - Library used for the display: [GxEPD2](https://github.com/ZinggJM/GxEPD2)
   - Sleep modes on the *ESP32-C3*: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c3/api-reference/system/sleep_modes.html).
   - Showcasing the display and library: [Video](https://youtu.be/KZGjsC-JkR8?si=c3sMc7xT4hFs9A2L).
     And the code they used: [GitHub](https://github.com/devtales-official/screen-test/tree/main/devtales_screentest_ep2).
@@ -107,15 +106,17 @@ The compromises are not yet fully clear to me, further testing and investigation
   - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1)
   - Holding pins in deep sleep: [Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).
 
-## Other Uses, Future Updates
+## Ports, Future Updates
 
 The display could be reasonably used with *Esphome*. The configuration however is quite difficult, and the power efficiency will 
-definitely be worse.
+definitely be worse. I do not think I will be attempting to port it. I already have code for a [similar project](#related-projects).
 
-I'm already designing a new version of the mainboard. This version will probably have a new pinout, and may not require the global SPI remap.
+I'm already designing a new version of the mainboard. This version will probably have a new pinout, and may not require the global SPI remap. The current board requires some patching, and does not fulfill all my requirements. I will not be uploading this board version,
+but I'm working on the new one, that sould work out of the box.
 
 ## Related Projects
 
 The mainboard is borrowed from *Weather Station V1*. The only hardware difference is the display, as that project uses the 3 color version.
-
 The software however is completely different, as that project uses *Esphome*.
+
+After designing the new mainboard, I will be publishing mor information and configuration regarding that project, in a seprate repo.
