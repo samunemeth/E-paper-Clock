@@ -63,6 +63,7 @@ The compromises are not yet fully clear to me, further testing and investigation
   - Calibrate the ADC a bit more.
   - Critical battery mode, stop operation.
   - Manual time settings. *(This is hard to do btw.)*
+  - Fix accidental bugs.
 
 **Test**
   - Test power consumption, and try to minimise it.
