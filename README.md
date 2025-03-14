@@ -56,7 +56,7 @@ use a search on the main part of the code.
   - Calibrate the ADC a bit more.
   - Critical battery mode, stop operation.
   - Manual time settings. *(This is hard to do btw.)*
-  - Look at "TODO" labeled commets.
+  - Look at "TODO" labeled comments.
   - Clean up `platformio.ini` file.
 
 **Test**
@@ -69,18 +69,23 @@ use a search on the main part of the code.
   - Document global SPI port remapping.
   - Document WiFi setup.
 
+## Setup
+
+  - Set your WiFi credentials.
+  - Change your port settings in the project file. You can also use auto port detection on windows but *not* on linux.
+
 ## Design Choices
 
 ### Modes
 
-Modes are stored in a `uint8_t`, and have constatns with their names
+Modes are stored in a `uint8_t`, and have constants with their names
 and a `*_MODE` suffix.
 A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
 | Mode Name: | NULL | NORMAL | UPDATE | USER | RESET | RESYNC |
 | ---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 |
-| Bitshifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
+| Bit shifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
 
  
 ### Timer Choice
@@ -112,11 +117,11 @@ The display could be reasonably used with *Esphome*. The configuration however i
 definitely be worse. I do not think I will be attempting to port it. I already have code for a [similar project](#related-projects).
 
 I'm already designing a new version of the mainboard. This version will probably have a new pinout, and may not require the global SPI remap. The current board requires some patching, and does not fulfill all my requirements. I will not be uploading this board version,
-but I'm working on the new one, that sould work out of the box.
+but I'm working on the new one, that should work out of the box.
 
 ## Related Projects
 
 The mainboard is borrowed from *Weather Station V1*. The only hardware difference is the display, as that project uses the 3 color version.
 The software however is completely different, as that project uses *Esphome*.
 
-After designing the new mainboard, I will be publishing mor information and configuration regarding that project, in a seprate repo.
+After designing the new mainboard, I will be publishing mor information and configuration regarding that project, in a separate repo.
