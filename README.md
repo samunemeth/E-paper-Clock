@@ -37,13 +37,6 @@ use a search on the main part of the code.
 > I try to document the code as much as I can, but if you have any questions,
 > feel free to contact me.
 
-### Timer Choice
-
-The project is currently uses the *8MD256* clock source over the default *RC* oscillator.
-This is presumably more accurate, but uses more power, and only lets the ESP enter a lower
-level of deep sleep. More info on [sleep levels](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
-The compromises are not yet fully clear to me, further testing and investigation is required.
-
 ## ToDo
 
 **Done**
@@ -64,6 +57,7 @@ The compromises are not yet fully clear to me, further testing and investigation
   - Critical battery mode, stop operation.
   - Manual time settings. *(This is hard to do btw.)*
   - Fix accidental bugs.
+  - Clean up `platformio.ini` file.
 
 **Test**
   - Test power consumption, and try to minimise it.
@@ -76,12 +70,31 @@ The compromises are not yet fully clear to me, further testing and investigation
   - Document global SPI port remapping.
   - Document WiFi setup.
 
-## Libraries Used
+## Design Choices
 
-  - For the display: [GxEPD2](https://github.com/ZinggJM/GxEPD2)
+### Modes
+
+Modes are stored in a `uint8_t`, and have constatns with their names
+and a `*_MODE` suffix.
+A wanted mode can be written to EEPROM, to be selected on the next reboot.
+
+| Mode Name: | NORMAL | UPDATE | USER | RESET | RESYNC |
+| ---: | :---: | :---: | :---: | :---: | :---: |
+| Decimal Value: | 1 | 2 | 4 | 8 | 16 |
+| Bitshifted Value: | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
+
+ 
+### Timer Choice
+
+The project is currently uses the *8MD256* clock source over the default *RC* oscillator.
+This is presumably more accurate, but uses more power, and only lets the ESP enter a lower
+level of deep sleep. More info on [sleep levels](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
+The compromises are not yet fully clear to me, further testing and investigation is required.
+
 
 ## Useful Resources
 
+  - Library used for the display: [GxEPD2](https://github.com/ZinggJM/GxEPD2)
   - Purchase display: [AliExpress](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme).
   - Sleep modes on the *ESP32-C3*: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c3/api-reference/system/sleep_modes.html).
   - Showcasing the display and library: [Video](https://youtu.be/KZGjsC-JkR8?si=c3sMc7xT4hFs9A2L).
