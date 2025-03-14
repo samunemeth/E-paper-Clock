@@ -1,3 +1,5 @@
+#ifndef USED_PINS
+#define USED_PINS
 
 // --- Pin Definitions ---
 
@@ -17,3 +19,5 @@
 #define DISPLAY_BUSY_PIN 10
 #define DISP_MOSI_PIN    20            // MOSI, GLOBALLY-SET
 #define DISP_SCL_PIN     21            // SCK, GLOBALLY-SET
+
+#endif /* USED_PINS */
