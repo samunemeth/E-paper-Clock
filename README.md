@@ -78,10 +78,10 @@ Modes are stored in a `uint8_t`, and have constatns with their names
 and a `*_MODE` suffix.
 A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
-| Mode Name: | NORMAL | UPDATE | USER | RESET | RESYNC |
-| ---: | :---: | :---: | :---: | :---: | :---: |
-| Decimal Value: | 1 | 2 | 4 | 8 | 16 |
-| Bitshifted Value: | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
+| Mode Name: | NULL | NORMAL | UPDATE | USER | RESET | RESYNC |
+| ---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 |
+| Bitshifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
 
  
 ### Timer Choice

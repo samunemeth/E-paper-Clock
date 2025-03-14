@@ -26,11 +26,11 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 // --- Mode Numbering ---
 #define NULL_MODE   0
-#define NORMAL_MODE 1
-#define UPDATE_MODE 2
-#define USER_MODE   4
-#define RESET_MODE  8
-#define RESYNC_MODE 16
+#define NORMAL_MODE 1 << 0
+#define UPDATE_MODE 1 << 1
+#define USER_MODE   1 << 2
+#define RESET_MODE  1 << 3
+#define RESYNC_MODE 1 << 4
 
 // --- Global Variables ---
 
@@ -84,11 +84,6 @@ void setup() {
 
 
     // --- Getting the Mode ---
-
-
-    //   Mode Priority and Numbering
-    // NORMAL -> UPDATE -> USER -> RESET -> RESYNC
-    //   1         2        4        8        16
     
     // Initialize the EEPROM to the defined size.
     EEPROM.begin(EEPROM_SIZE);
