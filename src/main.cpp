@@ -221,7 +221,7 @@ void setup() {
         }
 
         // Round, and convert to a string.
-        sprintf(strf_battery_value_buf, "%d%%", (uint8_t)round(battery_percent));
+        sprintf(strf_battery_value_buf, "%d%%", (uint8_t)floor(battery_percent));
 
     #endif /* USE_BATTERY_VOLTAGE */
 
