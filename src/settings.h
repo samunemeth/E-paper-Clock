@@ -15,6 +15,10 @@
 // Doesn't display "RESYNC" message.
 #define RESYNC_SINGLE_REFRESH
 
+// Activates a demo mode, with resyncs every minute.
+// Useful for checking problems with resync mode.
+#define RESYNC_DEMO
+
 // The maximum number of seconds to count out in USER mode.
 #define MAX_USER_SECONDS        20
 

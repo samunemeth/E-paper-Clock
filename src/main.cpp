@@ -154,9 +154,15 @@ void setup() {
         // Get the time for the check.
         getTime();
 
-        // Check for all the times.
-        // TODO: There may be an accidenteal resync at midnight?
+        // Initialize variable.
         bool needs_resync = false;
+
+        // Do a resync every time if we are in demo mode.
+        #if defined(RESYNC_DEMO)
+        needs_resync = true;
+        #endif
+
+        // Check for all the times.
         for (uint8_t i = 0; i < sizeof(resync_at) / sizeof(resync_at[0]); i++) {
             needs_resync = needs_resync || (timeinfo.tm_hour == resync_at[i]) && (timeinfo.tm_min == 0);
         }
