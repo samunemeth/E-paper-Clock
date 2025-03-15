@@ -76,8 +76,9 @@ use a search on the main part of the code.
 **Hardware Fix**
   - Buttons have to be active low.
   - Not all pins can wake up from deep sleep.
-  - Should prefer ADC1 over ADC2.
+  - Should prefer ADC1 for battery readings.
   - Testing, measuring points.
+  - Separate display and voltage divider power?
 
 ## Setup
 
@@ -86,7 +87,6 @@ use a search on the main part of the code.
   - Select the correct environment for uploading:
     - With `platformio.run -- environment YourEnvironment` on command line.
     - By selecting the correct folder in *VSCode*.
-  - Calibrate the ADC if you want it to be really precise. *[More Info](https://w4krl.com/esp32-analog-to-digital-conversion-accuracy/)*
 
 ## Design Choices
 
