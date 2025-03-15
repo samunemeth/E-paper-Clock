@@ -63,11 +63,12 @@ use a search on the main part of the code.
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
-  - DHCP supplied time servers.
   - Better fonts, for example *Roboto*.
   - Manual time settings. *(This is hard to do btw.)*
 
 **Test**
+  - Check if DHCP supplied time servers work.
+  - Check sntp time documentation, if it only gets time once.
   - Test if powering off the display is actually worth it. 
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
 

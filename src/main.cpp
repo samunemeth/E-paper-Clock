@@ -1,13 +1,13 @@
 // --- GxEPD2 Settings ---
 #define ENABLE_GxEPD2_GFX 0
+#define SNTP_GET_SERVERS_FROM_DHCP 1
 
 
 // --- Libraries ---
 #include <Arduino.h>
 #include <WiFi.h>
-#include <SPI.h>
-#include <time.h>
 
+#include <esp_sntp.h>
 #include <esp_adc_cal.h>
 
 
@@ -69,7 +69,7 @@ void IRAM_ATTR intLoopStop();
 
 // Time related functions.
 void getTime();
-void formatTime();
+void formatStrings();
 void configureTimeZone();
 
 
@@ -351,7 +351,7 @@ void setup() {
         if (mode == RESYNC_MODE) {
 
             // Format the time.
-            formatTime();
+            formatStrings();
 
             // Draw to display.
             #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
@@ -375,12 +375,15 @@ void setup() {
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
 
+        // Configure SNTP time sync.
+        sntp_servermode_dhcp(1);
+        sntp_setservername(1, SNTP_1);
+        sntp_setservername(2, SNTP_2);
+        sntp_init();
+        
         // Set up WiFi
         WiFi.mode(WIFI_STA);
         WiFi.begin(ssid, password);
-
-        // Set the desired SNTP server
-        configTime(0, 0, SNTP_1, SNTP_2);
 
         // Configure the time zone again, as the settings get lost here.
         configureTimeZone();
@@ -409,7 +412,7 @@ void setup() {
 
             // Format time for display
             getTime();
-            formatTime();
+            formatStrings();
         
             // Print the time to the display
             displayStartDraw();
@@ -441,7 +444,7 @@ void setup() {
             
             // Format time for display
             getTime();
-            formatTime();
+            formatStrings();
             
             // Print the time and seconds to the display
             displayStartDraw(/*fast=*/ true);
@@ -481,7 +484,7 @@ void setup() {
     } while (timeinfo.tm_sec > (59 - OMIT_SLEEP));
 
     // Format time for display
-    formatTime();
+    formatStrings();
 
 finalRender:
 
@@ -619,7 +622,7 @@ void configureTimeZone() {
 }
 
 /// @brief Update the global time string buffers with the corresponding values.
-void formatTime() {
+void formatStrings() {
 
     strftime(strf_hour_buf, sizeof(strf_hour_buf), "%H", &timeinfo);
     strftime(strf_minute_buf, sizeof(strf_minute_buf), "%M", &timeinfo);
