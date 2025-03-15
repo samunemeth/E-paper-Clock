@@ -50,10 +50,10 @@ use a search on the main part of the code.
   - ~~Calibrate the ADC a bit more.~~
   - ~~Battery voltage to percent.~~
   - ~~More text on update mode.~~
+  - ~~Clean up `platformio.ini` file.~~
+  - ~~Move `display-helper.h` files, disambiguate `Fonts` directory.~~
 
 **Implement**
-  - Clean up `platformio.ini` file.
-  - Move `display-helper.h` files, disambiguate `Fonts` directory.
   - Look at "TODO" labeled comments.
   - Critical battery mode, stop operation.
   - Add icons for status bar.

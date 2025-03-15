@@ -19,7 +19,7 @@
 
 
 // --- Components ---
-#include "display-helpers.h"
+#include "display_helper/display_helper.h"
 
 
 // --- Calculated Constants ---

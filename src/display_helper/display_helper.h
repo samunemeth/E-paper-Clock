@@ -7,7 +7,7 @@
 #include "pins.h"
 
 // --- Fonts ---
-#include "Fonts/FreeMonoBold48pt7b.h"
+#include "custom_fonts/FreeMonoBold48pt7b.h"
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold9pt7b.h>

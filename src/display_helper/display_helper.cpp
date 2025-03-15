@@ -1,4 +1,4 @@
-# include "display-helpers.h"
+# include "display_helper.h"
 
 
 // --- Globals ---
@@ -95,7 +95,7 @@ void displayRenderDate(char* date_buf) {
 }
 
 /// @brief Render the seconds to the display over the large colon.
-/// @param seconds Seconds in intiger format.
+/// @param seconds Seconds in integer format.
 void displayRenderSecond(uint8_t seconds) {
 
     display.setFont(&FreeMonoBold12pt7b);
