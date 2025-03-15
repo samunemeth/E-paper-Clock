@@ -59,13 +59,13 @@ void displayRenderBorders() {
 }
 
 /// @brief Renders the status bar on the top of the display.
-/// @param battery_voltage_buf Battery voltage in string format.
+/// @param battery_value_buf Battery voltage in string format.
 /// @param last_sync_hour_buf Last sync hours in string format.
 /// @param last_sync_minute_buf Last sync minutes in string format.
-void displayRenderStatusBar(char* battery_voltage_buf, char* last_sync_hour_buf, char* last_sync_minute_buf) {
+void displayRenderStatusBar(char* battery_value_buf, char* last_sync_hour_buf, char* last_sync_minute_buf) {
 
     display.setFont(&FreeMonoBold9pt7b);
-    displayCenterText(battery_voltage_buf, 32, 6);
+    displayCenterText(battery_value_buf, 32, 6);
 
     displayCenterText(last_sync_hour_buf, 260, 6);
     displayCenterText((char*)":", 273, 6);

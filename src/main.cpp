@@ -53,7 +53,7 @@ char strf_minute_buf[4];
 char strf_date_buf[16];
 char strf_last_sync_hour_buf[4];
 char strf_last_sync_minute_buf[4];
-char strf_battery_voltage_buf[8];
+char strf_battery_value_buf[8];
 
 // Loop status
 bool loop_running;
@@ -200,8 +200,30 @@ void setup() {
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
     float battery_voltage = ((float)esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) / 1000) * ADC_FACTOR;
 
-    // Convert the float into a string.
-    sprintf(strf_battery_voltage_buf, "%.3fV", battery_voltage);
+    // Do calculation based on the settings.
+    #if defined(USE_BATTERY_VOLTAGE)
+
+        // Convert voltage to a string.
+        sprintf(strf_battery_value_buf, "%.1fV", battery_voltage);
+
+    #else
+
+        // Calculate battery percent based on an approximation. 
+        float battery_percent;
+        if (battery_percent >= 4.2 - FULL_BATTERY_TOLERANCE) {
+            battery_percent = 100;
+        } else if (battery_voltage >= 3.87) {
+            battery_percent = 120 * battery_voltage - 404;
+        } else if (battery_voltage > 3.3) {
+            battery_percent = 113 / (1 + exp(46.3 - 12 * battery_voltage));
+        } else {
+            battery_percent = 0;
+        }
+
+        // Round, and convert to a string.
+        sprintf(strf_battery_value_buf, "%d%%", (uint8_t)round(battery_percent));
+
+    #endif /* USE_BATTERY_VOLTAGE */
 
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
@@ -278,7 +300,7 @@ void setup() {
             #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
 
@@ -333,7 +355,7 @@ void setup() {
             displayStartDraw();
 
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
         
@@ -365,7 +387,7 @@ void setup() {
             displayStartDraw(/*fast=*/ true);
             
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
             displayRenderSecond(timeinfo.tm_sec);
@@ -429,7 +451,7 @@ finalRender:
     #endif /* PREFER_FAST_REFRESH */
 
     displayRenderBorders();
-    displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+    displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
     displayRenderTime(strf_hour_buf, strf_minute_buf);
     displayRenderDate(strf_date_buf);
 

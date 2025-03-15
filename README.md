@@ -48,6 +48,7 @@ use a search on the main part of the code.
   - ~~Implement user mode~~
   - ~~Single refresh on resync option.~~
   - ~~Calibrate the ADC a bit more.~~
+  - ~~Battery voltage to percent.~~
 
 **Implement**
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
@@ -60,7 +61,6 @@ use a search on the main part of the code.
   - Look at "TODO" labeled comments.
   - Clean up `platformio.ini` file.
   - Move `display-helper.h` files, disambiguate `Fonts` directory.
-  - Battery voltage to percent.
 
 **Test**
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
@@ -126,6 +126,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Holding pins in deep sleep: [Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).
   - ADC accuracy: [Link Tree](https://www.esp32.com/viewtopic.php?t=23902).
   - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
+  - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
 
 ## Ports, Future Updates
 

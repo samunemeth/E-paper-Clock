@@ -17,7 +17,10 @@
 
 // Activates a demo mode, with resyncs every minute.
 // Useful for checking problems with resync mode.
-#define RESYNC_DEMO
+//#define RESYNC_DEMO
+
+// Displays battery voltage rounded to one decimals, insted of approximated battery precentage.
+//#define USE_BATTERY_VOLTAGE
 
 // The maximum number of seconds to count out in USER mode.
 #define MAX_USER_SECONDS        20
@@ -32,6 +35,7 @@
 
 #define ADC_FACTOR              2                              // The factor to multiply the measured voltage with. Depends on the voltage divider.
 #define ADC_OVER_SAMPLE_COUNT   8                              // How many times to sample and average the 
+#define FULL_BATTERY_TOLERANCE  0.05                           // How much off can the battery voltage be from full, to be still considered as full.
 
 uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clock at there hours. (24h format)
 
