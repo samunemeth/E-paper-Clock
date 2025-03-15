@@ -183,9 +183,17 @@ void setup() {
         readSyncEEPROM();
     }
 
-    // Read the battery voltage, and convert it to a string.
+    // Set the battery voltage pin to input.
     pinMode(BATT_SENSE_PIN, INPUT);
-    float battery_voltage = (float)analogRead(BATT_SENSE_PIN) * ADC_MAGIC_VAL;
+    float battery_raw;
+
+    for (uint8_t i = 0; i < ADC_OVER_SAMPLE_COUNT; i++) {
+        battery_raw += (float)analogRead(BATT_SENSE_PIN);
+    }
+    battery_raw = battery_raw / (float)ADC_OVER_SAMPLE_COUNT;
+
+    // Convert the float into a string.
+    float battery_voltage = ADC_FACTOR * (battery_raw * ADC_LINEAR + ADC_CONSTANT);
     sprintf(strf_battery_voltage_buf, "%.3fV", battery_voltage);
 
     // The order of operations is intentional.

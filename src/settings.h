@@ -30,7 +30,11 @@
 #define SNTP_2                  "1.pool.ntp.org"               // Secondary SNTP server.
 #define TIMEZONE                "CET-1CEST,M3.5.0,M10.5.0/3"   // Time zone for the clock. Here I'm using Budapest time.
 
-#define ADC_MAGIC_VAL           0.0014                         // The conversion factor between the ADC output and battery voltage. It includes the voltage divider.
+// Calibration for the ADC
+#define ADC_LINEAR              0.0006626
+#define ADC_CONSTANT            0.15
+#define ADC_FACTOR              2.0000
+#define ADC_OVER_SAMPLE_COUNT   8                              // How many times to sample and average the ADC.
 
 uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clock at there hours. (24h format)
 

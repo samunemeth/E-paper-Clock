@@ -47,6 +47,7 @@ use a search on the main part of the code.
   - ~~Add GPIO wakeup to buttons.~~
   - ~~Implement user mode~~
   - ~~Single refresh on resync option.~~
+  - ~~Calibrate the ADC a bit more.~~
 
 **Implement**
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
@@ -54,7 +55,6 @@ use a search on the main part of the code.
   - More text on update mode.
   - Better fonts, for example *Roboto*.
   - Show wifi strength at last sync.
-  - Calibrate the ADC a bit more.
   - Critical battery mode, stop operation.
   - Manual time settings. *(This is hard to do btw.)*
   - Look at "TODO" labeled comments.
@@ -71,6 +71,13 @@ use a search on the main part of the code.
   - Document assembly and schematics.
   - Document global SPI port remapping.
   - Document WiFi setup.
+  - Document ADC calibration.
+
+**Hardware Fix**
+  - Buttons have to be active low.
+  - Not all pins can wake up from deep sleep.
+  - Should prefer ADC1 over ADC2.
+  - Testing, measuring points.
 
 ## Setup
 
@@ -79,6 +86,7 @@ use a search on the main part of the code.
   - Select the correct environment for uploading:
     - With `platformio.run -- environment YourEnvironment` on command line.
     - By selecting the correct folder in *VSCode*.
+  - Calibrate the ADC if you want it to be really precise. *[More Info](https://w4krl.com/esp32-analog-to-digital-conversion-accuracy/)*
 
 ## Design Choices
 
@@ -113,9 +121,10 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   *(tl;dr: You pretty much must do this on linux.)*
   - How to remap global SPI ports: [Arduino Forum Thread](https://forum.arduino.cc/t/understanding-spi-pin-remapping-for-gxepd2-on-a-esp32-c3-mini/1065982).
   *(I looked 3 hours for this.)*
-  - Advanced deep sleep wakeup functionality: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/deep-sleep-stub.html)
-  - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1)
+  - Advanced deep sleep wakeup functionality: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/deep-sleep-stub.html).
+  - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1).
   - Holding pins in deep sleep: [Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).
+  - ADC accuracy: [Blog](https://w4krl.com/esp32-analog-to-digital-conversion-accuracy/).
 
 ## Ports, Future Updates
 
