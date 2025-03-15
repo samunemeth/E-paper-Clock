@@ -46,6 +46,7 @@ use a search on the main part of the code.
   - ~~Change delays to async ones, or sleeps.~~
   - ~~Add GPIO wakeup to buttons.~~
   - ~~Implement user mode~~
+  - ~~Single refresh on resync option.~~
 
 **Implement**
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
@@ -59,7 +60,6 @@ use a search on the main part of the code.
   - Look at "TODO" labeled comments.
   - Clean up `platformio.ini` file.
   - Move `display-helper.h` files, disambiguate `Fonts` directory.
-  - Single refresh on resync?
   - Battery voltage to percent.
 
 **Test**
@@ -76,6 +76,9 @@ use a search on the main part of the code.
 
   - Set your WiFi credentials.
   - Change your port settings in the project file. You can also use auto port detection on windows but *not* on linux.
+  - Select the correct environment for uploading:
+    - With `platformio.run -- environment YourEnvironment` on command line.
+    - By selecting the correct folder in *VSCode*.
 
 ## Design Choices
 
