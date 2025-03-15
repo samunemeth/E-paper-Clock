@@ -35,7 +35,7 @@ void displayEndDraw() {
 /// @param x The X coordinate.
 /// @param y The Y coordinate.
 /// @param onlyCursor If true, the text will not be rendered, but the cursor will be positioned.
-void displayCenterText(char* text, uint16_t x = (display.width() / 2), uint16_t y = (display.height() / 2), bool onlyCursor) {
+void displayCenterText(char* text, uint16_t x = 148, uint16_t y = 64, bool onlyCursor) {
 
     // Get bounding box of text.
     int16_t tbx, tby; uint16_t tbw, tbh;
@@ -119,6 +119,22 @@ void displayRenderClaim(char* text) {
 
     display.setFont(&FreeMonoBold24pt7b);
     displayCenterText(text);
+
+}
+
+/// @brief Renders the update message to the display.
+void displayRenderUpdateMessage() {
+
+    display.setFont(&FreeMonoBold12pt7b);
+    displayCenterText((char*)"ISOLATE", 148, 12);
+    display.setFont(&FreeMonoBold9pt7b);
+    displayCenterText((char*)"before plugging in", 148, 32);
+
+    display.setFont(&FreeMonoBold24pt7b);
+    displayCenterText((char*)"UPDATE", 148, 74);
+
+    display.setFont(&FreeMonoBold9pt7b);
+    displayCenterText((char*)"Connect to ESP32 directly!", 148, 116);
 
 }
 

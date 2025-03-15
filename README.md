@@ -49,22 +49,23 @@ use a search on the main part of the code.
   - ~~Single refresh on resync option.~~
   - ~~Calibrate the ADC a bit more.~~
   - ~~Battery voltage to percent.~~
+  - ~~More text on update mode.~~
 
 **Implement**
-  - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
-  - Skip resync if the wifi times out.
-  - More text on update mode.
-  - Better fonts, for example *Roboto*.
-  - Show wifi strength at last sync.
-  - Critical battery mode, stop operation.
-  - Manual time settings. *(This is hard to do btw.)*
-  - Look at "TODO" labeled comments.
   - Clean up `platformio.ini` file.
   - Move `display-helper.h` files, disambiguate `Fonts` directory.
+  - Look at "TODO" labeled comments.
+  - Critical battery mode, stop operation.
+  - Add charging detection?
+  - Show wifi strength at last sync.
+  - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
+  - Skip resync if the wifi times out.
+  - Better fonts, for example *Roboto*.
+  - Manual time settings. *(This is hard to do btw.)*
 
 **Test**
-  - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
   - Test if powering off the display is actually worth it. 
+  - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
 
 **Document**
   - Document the font creation process.

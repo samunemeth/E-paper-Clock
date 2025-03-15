@@ -250,7 +250,7 @@ void setup() {
             displayStartDraw();
         #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
-        displayRenderClaim((char*)"UPDATE");
+        displayRenderUpdateMessage();
 
         displayEndDraw();
 
