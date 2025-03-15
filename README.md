@@ -45,7 +45,7 @@ use a search on the main part of the code.
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
-  - Move to *espidf*.
+  - Move to *ESP-IDF*. *(This requires big changes.)*
   - Better fonts, for example *Roboto*.
   - Add charging detection?
 
@@ -60,7 +60,6 @@ use a search on the main part of the code.
   - Document assembly and schematics.
   - Document global SPI port remapping.
   - Document WiFi setup.
-  - Document ADC calibration.
 
 **Hardware Fix**
   - Buttons have to be active low.
