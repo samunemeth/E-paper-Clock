@@ -209,19 +209,19 @@ void setup() {
     #else
 
         // Calculate battery percent based on an approximation. 
-        float battery_percent;
-        if (battery_percent >= (4.2 - FULL_BATTERY_TOLERANCE)) {
+        uint8_t battery_percent;
+        if (battery_voltage >= (4.2 - FULL_BATTERY_TOLERANCE)) {
             battery_percent = 100;
         } else if (battery_voltage >= 3.87) {
-            battery_percent = 120 * battery_voltage - 404;
+            battery_percent = round(120 * battery_voltage - 404);
         } else if (battery_voltage > 3.3) {
-            battery_percent = 113 / (1 + exp(46.3 - 12 * battery_voltage));
+            battery_percent = round(113 / (1 + exp(46.3 - 12 * battery_voltage)));
         } else {
             battery_percent = 0;
         }
 
         // Round, and convert to a string.
-        sprintf(strf_battery_value_buf, "%d%%", (uint8_t)floor(battery_percent));
+        sprintf(strf_battery_value_buf, "%d%%", battery_percent);
 
     #endif /* USE_BATTERY_VOLTAGE */
 
