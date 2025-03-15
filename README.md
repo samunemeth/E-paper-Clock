@@ -124,7 +124,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Advanced deep sleep wakeup functionality: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/deep-sleep-stub.html).
   - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1).
   - Holding pins in deep sleep: [Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).
-  - ADC accuracy: [Blog](https://w4krl.com/esp32-analog-to-digital-conversion-accuracy/).
+  - ADC accuracy: [Link Tree](https://www.esp32.com/viewtopic.php?t=23902).
 
 ## Ports, Future Updates
 

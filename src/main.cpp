@@ -9,6 +9,8 @@
 #include <EEPROM.h>
 #include <time.h>
 
+#include <esp_adc_cal.h>
+
 
 // --- Settings and Pins ---
 #include "settings.h"
@@ -185,15 +187,20 @@ void setup() {
 
     // Set the battery voltage pin to input.
     pinMode(BATT_SENSE_PIN, INPUT);
-    float battery_raw;
 
+    // Get raw measurement with oversampling.
+    float battery_raw;
     for (uint8_t i = 0; i < ADC_OVER_SAMPLE_COUNT; i++) {
         battery_raw += (float)analogRead(BATT_SENSE_PIN);
     }
     battery_raw = battery_raw / (float)ADC_OVER_SAMPLE_COUNT;
 
+    // Calibrate the battery voltage reading.
+    esp_adc_cal_characteristics_t adc_chars;
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
+    float battery_voltage = ((float)esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) / 1000) * ADC_FACTOR;
+
     // Convert the float into a string.
-    float battery_voltage = ADC_FACTOR * (battery_raw * ADC_LINEAR + ADC_CONSTANT);
     sprintf(strf_battery_voltage_buf, "%.3fV", battery_voltage);
 
     // The order of operations is intentional.
