@@ -210,7 +210,7 @@ void setup() {
 
         // Calculate battery percent based on an approximation. 
         float battery_percent;
-        if (battery_percent >= 4.2 - FULL_BATTERY_TOLERANCE) {
+        if (battery_percent >= (4.2 - FULL_BATTERY_TOLERANCE)) {
             battery_percent = 100;
         } else if (battery_voltage >= 3.87) {
             battery_percent = 120 * battery_voltage - 404;
