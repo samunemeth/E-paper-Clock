@@ -1,6 +1,5 @@
 Import("env")
 
-# TODO: Only on linux!
 def before_upload(source, target, env):
     port = env.GetProjectOption("upload_port")
     print("Adding permission for upload port: " + port)
