@@ -56,6 +56,7 @@ use a search on the main part of the code.
   - Move `display-helper.h` files, disambiguate `Fonts` directory.
   - Look at "TODO" labeled comments.
   - Critical battery mode, stop operation.
+  - Add icons for status bar.
   - Add charging detection?
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
