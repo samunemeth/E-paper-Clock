@@ -125,6 +125,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Deep sleep wakeup with gpio: [StackOverflow](https://stackoverflow.com/questions/76823215/deep-sleep-with-ext0-or-ext1-on-esp32-c3-mini-1).
   - Holding pins in deep sleep: [Reddit](https://www.reddit.com/r/esp32/comments/1dhh5ez/esp32c3_pin_goes_high_on_deep_sleep/).
   - ADC accuracy: [Link Tree](https://www.esp32.com/viewtopic.php?t=23902).
+  - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
 
 ## Ports, Future Updates
 
