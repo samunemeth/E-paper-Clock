@@ -11,6 +11,10 @@
 // Displays "STARTING" text after a reset. Can cause ghosting.
 //#define DISPLAY_START_MESSAGE
 
+// Uses a single refresh instead of two when resyncing.
+// Doesn't display "RESYNC" message.
+#define RESYNC_SINGLE_REFRESH
+
 // The maximum number of seconds to count out in USER mode.
 #define MAX_USER_SECONDS        20
 

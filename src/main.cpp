@@ -180,7 +180,7 @@ void setup() {
     // Read the battery voltage, and convert it to a string.
     pinMode(BATT_SENSE_PIN, INPUT);
     float battery_voltage = (float)analogRead(BATT_SENSE_PIN) * ADC_MAGIC_VAL;
-    sprintf(strf_battery_voltage_buf, "%.1fV", battery_voltage);
+    sprintf(strf_battery_voltage_buf, "%.3fV", battery_voltage);
 
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
@@ -239,30 +239,34 @@ void setup() {
 
     }
 
-    // If we are in RESYNC mode, we already know the approximate time.
-    // Display that and a flag indicating the resync.
-    if (mode == RESYNC_MODE) {
+    // If we are in resync single refresh mode, we can skip this part.
+    #if !defined(RESYNC_SINGLE_REFRESH)
 
-        // Format the time.
-        formatTime();
+        // If we are in RESYNC mode, we already know the approximate time.
+        // Display that and a flag indicating the resync.
+        if (mode == RESYNC_MODE) {
 
-        // Draw to display.
-        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
-            displayStartDraw(/*fast=*/ true);
-        #else
-            displayStartDraw();
-        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
+            // Format the time.
+            formatTime();
 
-        displayRenderBorders();
-        displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
-        displayRenderTime(strf_hour_buf, strf_minute_buf);
-        displayRenderDate(strf_date_buf);
+            // Draw to display.
+            #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+                displayStartDraw(/*fast=*/ true);
+            #else
+                displayStartDraw();
+            #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
 
-        displayRenderFlag((char*)"RESYNC");
+            displayRenderBorders();
+            displayRenderStatusBar(strf_battery_voltage_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderTime(strf_hour_buf, strf_minute_buf);
+            displayRenderDate(strf_date_buf);
 
-        displayEndDraw();
+            displayRenderFlag((char*)"RESYNC");
 
-    }
+            displayEndDraw();
+
+        }
+    #endif
 
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
@@ -380,24 +384,25 @@ finalRender:
 
     // Print the time to the display
     #if defined(PREFER_FAST_REFRESH)
-
         #if defined(POWER_DOWN_DISPLAY)
 
-            // If we are in RESYNC or RESET or USER mode, we can do a fast refresh to save some time and power.
-            if (mode == RESYNC_MODE || mode == RESET_MODE || mode == USER_MODE) {
-                displayStartDraw(/*fast=*/ true);
-            } else {
-                displayStartDraw(/*fast=*/ false);
-            }
+            // See if a fast refresh can be done.
+            bool do_fast_refresh = false;
+            do_fast_refresh = (mode == RESET_MODE) || (mode == USER_MODE);
+            #if !defined(RESYNC_SINGLE_REFRESH)
+                do_fast_refresh = do_fast_refresh || (mode == RESYNC_MODE);
+            #endif /* !RESYNC_SINGLE_REFRESH */
+
+            // If we can, do a fast refresh.
+            displayStartDraw(/*fast=*/ do_fast_refresh);
 
         #else
 
             displayStartDraw(/*fast=*/ true);
             
         #endif /* POWER_DOWN_DISPLAY */
-
     #else
-
+        
         displayStartDraw();
 
     #endif /* PREFER_FAST_REFRESH */
