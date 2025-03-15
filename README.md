@@ -39,32 +39,15 @@ use a search on the main part of the code.
 
 ## ToDo
 
-**Done**
-  - ~~Periodic re-sync to the time server.~~
-  - ~~Show last sync time.~~
-  - ~~Show custom page in update mode.~~
-  - ~~Change delays to async ones, or sleeps.~~
-  - ~~Add GPIO wakeup to buttons.~~
-  - ~~Implement user mode~~
-  - ~~Single refresh on resync option.~~
-  - ~~Calibrate the ADC a bit more.~~
-  - ~~Battery voltage to percent.~~
-  - ~~More text on update mode.~~
-  - ~~Clean up `platformio.ini` file.~~
-  - ~~Move `display-helper.h` files, disambiguate `Fonts` directory.~~
-  - ~~Critical battery mode, stop operation.~~
-  - ~~Don't use EEPROM.~~
-
 **Implement**
   - Use struct for modes.
-  - Move to *espidf*.
   - Add icons for status bar.
-  - Add charging detection?
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
+  - Move to *espidf*.
   - Better fonts, for example *Roboto*.
-  - Manual time settings. *(This is hard to do btw.)*
+  - Add charging detection?
 
 **Test**
   - Check if DHCP supplied time servers work.
@@ -134,6 +117,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
   - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
   - Rebooting with persistent RTC memory: [Reddit](https://www.reddit.com/r/esp32/comments/qokk1z/reboot_without_losing_rtc_variables/).
+  - ESP-IDF e-papper library based on *GxEPD2*: [GitHub](https://github.com/martinberlin/CalEPD).
 
 ## Ports, Future Updates
 
