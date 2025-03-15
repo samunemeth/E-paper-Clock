@@ -116,7 +116,6 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
   - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
   - Rebooting with persistent RTC memory: [Reddit](https://www.reddit.com/r/esp32/comments/qokk1z/reboot_without_losing_rtc_variables/).
-  - ESP-IDF e-papper library based on *GxEPD2*: [GitHub](https://github.com/martinberlin/CalEPD).
 
 ## Ports, Future Updates
 
