@@ -58,6 +58,9 @@ use a search on the main part of the code.
   - Manual time settings. *(This is hard to do btw.)*
   - Look at "TODO" labeled comments.
   - Clean up `platformio.ini` file.
+  - Move `display-helper.h` files, disambiguate `Fonts` directory.
+  - Single refresh on resync?
+  - Battery voltage to percent.
 
 **Test**
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
