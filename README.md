@@ -40,6 +40,7 @@ use a search on the main part of the code.
 ## ToDo
 
 **Implement**
+  - Try to hibernate display.
   - Use struct for modes.
   - Add icons for status bar.
   - Show wifi strength at last sync.
