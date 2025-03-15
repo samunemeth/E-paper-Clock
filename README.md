@@ -53,16 +53,17 @@ use a search on the main part of the code.
   - ~~Clean up `platformio.ini` file.~~
   - ~~Move `display-helper.h` files, disambiguate `Fonts` directory.~~
   - ~~Critical battery mode, stop operation.~~
+  - ~~Don't use EEPROM.~~
 
 **Implement**
   - Use struct for modes.
-  - Don't use EEPROM.
   - Move to *espidf*.
   - Add icons for status bar.
   - Add charging detection?
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
+  - DHCP supplied time servers.
   - Better fonts, for example *Roboto*.
   - Manual time settings. *(This is hard to do btw.)*
 
@@ -131,6 +132,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - ADC accuracy: [Link Tree](https://www.esp32.com/viewtopic.php?t=23902).
   - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
   - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
+  - Rebooting with persistent RTC memory: [Reddit](https://www.reddit.com/r/esp32/comments/qokk1z/reboot_without_losing_rtc_variables/).
 
 ## Ports, Future Updates
 

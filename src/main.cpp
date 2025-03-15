@@ -6,7 +6,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <SPI.h>
-#include <EEPROM.h>
 #include <time.h>
 
 #include <esp_adc_cal.h>
@@ -37,12 +36,11 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 // --- Global Variables ---
 
-// EEPROM values
-#define EEPROM_SIZE 4
-uint8_t mode = NULL_MODE;
-uint8_t last_mode = NULL_MODE;
-uint8_t last_sync_hour = 0;
-uint8_t last_sync_minute = 0;
+// Persistent values
+uint8_t RTC_NOINIT_ATTR desired_mode = NULL_MODE;
+uint8_t RTC_NOINIT_ATTR mode = NULL_MODE;
+uint8_t RTC_NOINIT_ATTR last_sync_hour = 0;
+uint8_t RTC_NOINIT_ATTR last_sync_minute = 0;
 
 // Time
 time_t now;
@@ -69,13 +67,6 @@ void IRAM_ATTR intUserMode();
 void IRAM_ATTR intNormalMode();
 void IRAM_ATTR intLoopStop();
 
-// EEPROM related functions.
-void readModeEEPROM();
-void writeModeEEPROM(uint8_t new_mode = NULL_MODE);
-
-void readSyncEEPROM();
-void writeSyncEEPROM();
-
 // Time related functions.
 void getTime();
 void formatTime();
@@ -87,48 +78,85 @@ void setup() {
 
 
     // --- Getting the Mode ---
+
+
+    // To request modes, and store previous modes, and date from before resets, RTC FAST memory is used.
+    // Variables labelled with `RTC_NOINIT_ATTR` are store in RTC FAST memory, and as the "NOINIT" port suggest,
+    // are not cleared on resets. (As opposed to `RTC_DATA_ATTR`, witch only persists after deep sleep.)
+
+    // To filter mangled data after a power on reset, or reset after ax exception,
+    // the variables are cleared unless a soft reset or wakeup occurred.
     
-    // Initialize the EEPROM to the defined size.
-    EEPROM.begin(EEPROM_SIZE);
+    // Get the reason of the reset.
+    const esp_reset_reason_t reset_cause = esp_reset_reason();
 
-    // Read the mode from the EEPROM. If we have something in the values, it will
-    // be stored in the variables.
-    readModeEEPROM();
+    // If we were not soft reset, or woken up from deep sleep, we have to wipe some variables.
+    if ((reset_cause != ESP_RST_DEEPSLEEP) && (reset_cause != ESP_RST_SW)) {
 
-    // At this point, the read from the EEPROM may have over written the mode variable
-    // with update or user mode, as these can be triggered from an interrupt.
+        // Clear persistent variables.
+        desired_mode = RESET_MODE;
+        mode = NULL_MODE;
+        last_sync_hour = 0;
+        last_sync_minute = 0;
 
-    // Get the wakeup cause.
-    const esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();
+    }
 
-    // If the timer triggered the wakeup, we can be sure that we are either in normal mode.
-    if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER)) { mode = NORMAL_MODE; }
+    // Rotate mode variable to last mode.
+    uint8_t last_mode = mode;
 
+    // Check if we have a valid desired mode.
+    if (desired_mode == NORMAL_MODE ||
+        desired_mode == UPDATE_MODE ||
+        desired_mode == USER_MODE || 
+        desired_mode == RESET_MODE) {
+
+        // Set that as our current mode.
+        mode = desired_mode;
+
+    } else {
+
+        // If we do not have a valid desired mode, just clear the variable.
+        mode = NULL_MODE;
+
+    }
+
+    // Clear the desired mode
+    desired_mode = NULL_MODE;
+    
     // Next, we may need these inputs.
     pinMode(OTA_SW_PIN, INPUT_PULLUP);
     pinMode(BTN_TOP_PIN, INPUT_PULLUP);
 
-    // Here, we can check for a GPIO wakeup, if there is still no mode defined.
-    if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_GPIO)) {
+    // If we woken up from deep sleep, investigate the cause.
+    if (reset_cause == ESP_RST_DEEPSLEEP) {
 
-        // We can read the GPIO pins connected to the buttons.
-        // As the ESP reboots pretty fast, if the press is average length, it will still be pressed here.
-        // If the last mode was the same, do not enter update mode again, as this was a button press to exit.
-        bool update_btn_pressed = (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE);
-        bool user_btn_pressed = (digitalRead(BTN_TOP_PIN) == LOW);
+        // Get the wakeup cause.
+        const esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();
 
-        // Update mode has a higher priority, we will check that first.
-        if      (update_btn_pressed) { mode = UPDATE_MODE; }
-        else if (user_btn_pressed)   { mode = USER_MODE;   }
+        // If the timer triggered the wakeup, we can be sure that we are either in normal mode.
+        if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER)) { mode = NORMAL_MODE; }
+
+        // Here, we can check for a GPIO wakeup, if there is still no mode defined.
+        if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_GPIO)) {
+
+            // We can read the GPIO pins connected to the buttons.
+            // As the ESP reboots pretty fast, if the press is average length, it will still be pressed here.
+            // If the last mode was the same, do not enter update mode again, as this was a button press to exit.
+            bool update_btn_pressed = (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE);
+            bool user_btn_pressed = (digitalRead(BTN_TOP_PIN) == LOW);
+
+            // Update mode has a higher priority, we will check that first.
+            if      (update_btn_pressed) { mode = UPDATE_MODE; }
+            else if (user_btn_pressed)   { mode = USER_MODE;   }
+
+        }
 
     }
 
-    // Here we will know if we are in NORMAL, UPDATE or USER mode.
-    // If we aren't in any of those, we can just default to a hard reset.
+    // If we are not in any mode yet, just say we were in a reset.
+    // This should not be strictly necessary, but it's a good catch all.
+    // (An error could occur if we soft reset without a valid desired mode.)
     if (mode == NULL_MODE) { mode = RESET_MODE; }
-
-    // Here, we are in one of the modes. We can write a zero to the EEPROM to clear it.
-    writeModeEEPROM(NULL_MODE);
 
 
     // --- Powering Up, Initializing, Detecting Mode Modes ---
@@ -170,20 +198,11 @@ void setup() {
             needs_resync = needs_resync || (timeinfo.tm_hour == resync_at[i]) && (timeinfo.tm_min == 0);
         }
 
-        // If we need a resync, we can change the mode, and also update the EEPROM.
+        // If we need a resync, we can change the mode.
         if (needs_resync) {
             mode = RESYNC_MODE;
-            writeModeEEPROM(NULL_MODE);
         }
 
-    }
-
-    // We can also read the last sync times if we are not in reset mode.
-    // If we were in a reset, we can clear them.
-    if (mode == RESET_MODE) {
-        writeSyncEEPROM();
-    } else {
-        readSyncEEPROM();
     }
 
     // Set the battery voltage pin to input.
@@ -204,7 +223,6 @@ void setup() {
     // Detect critically low battery level, switch to critical mode.
     if (battery_voltage <= CRITICAL_BATTERY_LEVEL) {
         mode = CRITICAL_MODE;
-        writeModeEEPROM(NULL_MODE);
     }
 
     // Do calculation based on the settings.
@@ -379,7 +397,6 @@ void setup() {
         // Set the last sync times
         last_sync_hour = timeinfo.tm_hour;
         last_sync_minute = timeinfo.tm_min;
-        writeSyncEEPROM();
 
     }
 
@@ -515,9 +532,6 @@ finalRender:
     int64_t time_to_sleep = (60L - (int64_t)timeinfo.tm_sec) * 1000000L - ((int64_t)SLEEP_MARGIN * 1000L);
     esp_sleep_enable_timer_wakeup(time_to_sleep);
 
-    // Disables the RTC FAST memory, that is not used in our case. This saves power.
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
-
     // Set the pins that will wake up from deep sleep.
     // We check witch one caused the wakeup at the start.
     esp_deep_sleep_enable_gpio_wakeup(1 << OTA_SW_PIN_NUM, ESP_GPIO_WAKEUP_GPIO_LOW);
@@ -544,38 +558,35 @@ void loop() {};
 // --- Function Definitions ---
 
 
-
-
-
 // --- Interrupt Functions ---
 
 void IRAM_ATTR intUpdateMode() {
 
-    // Set mode to update mode, and save to the EEPROM.
-    writeModeEEPROM(UPDATE_MODE);
+    // Set desired mode to update mode.
+    desired_mode = UPDATE_MODE;
 
-    // Restart with the new mode in EEPROM.
-    ESP.restart();
+    // Restart.
+    esp_restart();
 
 }
 
 void IRAM_ATTR intUserMode() {
 
-    // Set mode to user, and save to the EEPROM.
-    writeModeEEPROM(USER_MODE);
+    // Set desired mode to user mode.
+    desired_mode = USER_MODE;
 
-    // Restart with the new mode in EEPROM.
-    ESP.restart();
+    // Restart.
+    esp_restart();
 
 }
 
 void IRAM_ATTR intNormalMode() {
 
-    // Set mode to user, and save to the EEPROM.
-    writeModeEEPROM(NORMAL_MODE);
+    // Set desired mode to normal mode.
+    desired_mode = NORMAL_MODE;
 
-    // Restart with the new mode in EEPROM.
-    ESP.restart();
+    // Restart.
+    esp_restart();
 
 }
 
@@ -583,47 +594,6 @@ void IRAM_ATTR intNormalMode() {
 void IRAM_ATTR intLoopStop() {
 
     loop_running = false;
-
-}
-
-// --- EEPROM Related Functions ---
-
-/// @brief Read the mode variables from the EEPROM
-void readModeEEPROM() {
-
-    mode = EEPROM.read(0);
-    last_mode = EEPROM.read(1);
-
-    // If the mode is invalid, set it to NULL mode.
-    if (mode != NORMAL_MODE && mode != UPDATE_MODE && mode != USER_MODE && mode != RESET_MODE && mode != RESYNC_MODE && mode != CRITICAL_MODE) {
-        mode = NULL_MODE;
-    }
-
-}
-
-/// @brief Write the mode variables from the EEPROM
-void writeModeEEPROM(uint8_t new_mode) {
-
-    EEPROM.write(0, new_mode);
-    EEPROM.write(1, mode);
-    EEPROM.commit();
-
-}
-
-/// @brief
-void readSyncEEPROM() {
-
-    last_sync_hour = EEPROM.read(2);
-    last_sync_minute = EEPROM.read(3);
-
-}
-
-/// @brief
-void writeSyncEEPROM() {
-
-    EEPROM.write(2, last_sync_hour);
-    EEPROM.write(3, last_sync_minute);
-    EEPROM.commit();
 
 }
 
