@@ -52,9 +52,12 @@ use a search on the main part of the code.
   - ~~More text on update mode.~~
   - ~~Clean up `platformio.ini` file.~~
   - ~~Move `display-helper.h` files, disambiguate `Fonts` directory.~~
+  - ~~Critical battery mode, stop operation.~~
 
 **Implement**
-  - Critical battery mode, stop operation.
+  - Use struct for modes.
+  - Don't use EEPROM.
+  - Move to *espidf*.
   - Add icons for status bar.
   - Add charging detection?
   - Show wifi strength at last sync.
@@ -97,10 +100,10 @@ Modes are stored in a `uint8_t`, and have constants with their names
 and a `*_MODE` suffix.
 A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
-| Mode Name: | NULL | NORMAL | UPDATE | USER | RESET | RESYNC |
-| ---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 |
-| Bit shifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 
+| Mode Name: | NULL | NORMAL | UPDATE | USER | RESET | RESYNC | CRITICAL |
+| ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 | 32 |
+| Bit shifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 |
 
  
 ### Timer Choice

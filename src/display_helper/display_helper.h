@@ -26,6 +26,7 @@ void displayRenderSecond(uint8_t seconds);
 void displayRenderFlag(char* text);
 void displayRenderClaim(char* text);
 void displayRenderUpdateMessage();
+void displayRenderCriticalMessage();
 
 void displayInit(bool wipe);
 void displayOff();

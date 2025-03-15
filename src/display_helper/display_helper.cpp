@@ -138,6 +138,18 @@ void displayRenderUpdateMessage() {
 
 }
 
+/// @brief Renders the critical battery level message to the display.
+void displayRenderCriticalMessage() {
+
+    display.setFont(&FreeMonoBold24pt7b);
+    displayCenterText((char*)"CRITICAL", 148, 32);
+    displayCenterText((char*)"BATTERY", 148, 72);
+
+    display.setFont(&FreeMonoBold9pt7b);
+    displayCenterText((char*)"Charge the device!", 148, 116);
+
+}
+
 /// @brief Initialize the display.
 /// @param wipe If true, does an initial wipe.
 void displayInit(bool wipe) {

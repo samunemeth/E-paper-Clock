@@ -27,12 +27,13 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 
 // --- Mode Numbering ---
-#define NULL_MODE   0
-#define NORMAL_MODE 1 << 0
-#define UPDATE_MODE 1 << 1
-#define USER_MODE   1 << 2
-#define RESET_MODE  1 << 3
-#define RESYNC_MODE 1 << 4
+#define NULL_MODE     0
+#define NORMAL_MODE   1 << 0
+#define UPDATE_MODE   1 << 1
+#define USER_MODE     1 << 2
+#define RESET_MODE    1 << 3
+#define RESYNC_MODE   1 << 4
+#define CRITICAL_MODE 1 << 5
 
 // --- Global Variables ---
 
@@ -130,7 +131,7 @@ void setup() {
     writeModeEEPROM(NULL_MODE);
 
 
-    // --- Using the Modes ---
+    // --- Powering Up, Initializing, Detecting Mode Modes ---
 
 
     // Regardless of the mode, the display will be used right after this.
@@ -200,6 +201,12 @@ void setup() {
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
     float battery_voltage = ((float)esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) / 1000) * ADC_FACTOR;
 
+    // Detect critically low battery level, switch to critical mode.
+    if (battery_voltage <= CRITICAL_BATTERY_LEVEL) {
+        mode = CRITICAL_MODE;
+        writeModeEEPROM(NULL_MODE);
+    }
+
     // Do calculation based on the settings.
     #if defined(USE_BATTERY_VOLTAGE)
 
@@ -228,9 +235,44 @@ void setup() {
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
 
+
+    // --- Using the Modes ---
+
+
     // Initialize the display.
     // If we are in RESET mode, we have to wipe the screen.
-    displayInit(mode == RESET_MODE);
+    displayInit(mode == RESET_MODE || mode == CRITICAL_MODE);
+
+    // If we are in critical mode, we need to display a warning message, and shut down the processor.
+    if (mode == CRITICAL_MODE) {
+
+        // Draw to display
+        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+            displayStartDraw(/*fast=*/ true);
+        #else
+            displayStartDraw();
+        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
+
+        displayRenderCriticalMessage();
+
+        displayEndDraw();
+
+        // Turn off the display and auxiliary power. We do not need them any more.
+        displayOff();
+        digitalWrite(AUX_PWR_PIN, LOW);
+
+        // Disable wakeup sources
+        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+
+        // Stop pin holding
+        gpio_hold_dis(AUX_PWR_PIN_NUM);
+        gpio_deep_sleep_hold_dis();
+
+        // Go into INDEFINITE deep sleep. (Basically shut down.)
+        // Nothing is run after this.
+        esp_deep_sleep_start();
+        
+    }
 
     // If we are in update mode, we basically have to stall the processor.
     if (mode == UPDATE_MODE) {
@@ -260,6 +302,7 @@ void setup() {
 
         // Block all other tasks.
         for (;;) vTaskDelay(loop_tick_delay);
+
     }
 
     // Display a start message
@@ -552,7 +595,7 @@ void readModeEEPROM() {
     last_mode = EEPROM.read(1);
 
     // If the mode is invalid, set it to NULL mode.
-    if (mode != NORMAL_MODE && mode != UPDATE_MODE && mode != USER_MODE && mode != RESET_MODE && mode != RESYNC_MODE) {
+    if (mode != NORMAL_MODE && mode != UPDATE_MODE && mode != USER_MODE && mode != RESET_MODE && mode != RESYNC_MODE && mode != CRITICAL_MODE) {
         mode = NULL_MODE;
     }
 

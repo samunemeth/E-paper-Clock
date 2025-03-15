@@ -35,7 +35,9 @@
 
 #define ADC_FACTOR              2                              // The factor to multiply the measured voltage with. Depends on the voltage divider.
 #define ADC_OVER_SAMPLE_COUNT   8                              // How many times to sample and average the 
+
 #define FULL_BATTERY_TOLERANCE  0.05                           // How much off can the battery voltage be from full, to be still considered as full.
+#define CRITICAL_BATTERY_LEVEL  3.5                            // Below this battery voltage, critical mode will be activated.
 
 uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clock at there hours. (24h format)
 
