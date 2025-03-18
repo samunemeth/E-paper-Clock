@@ -55,6 +55,7 @@ use a search on the main part of the code.
   - Check sntp time documentation, if it only gets time once.
   - Test if powering off the display is actually worth it. 
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
+  - Use external oscillator?
 
 **Document**
   - Document the font creation process.
@@ -104,6 +105,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Purchase display: [AliExpress](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme).
   - Library used for the display: [GxEPD2](https://github.com/ZinggJM/GxEPD2)
   - Sleep modes on the *ESP32-C3*: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c3/api-reference/system/sleep_modes.html).
+  - GPIO documentation: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.1.4/esp32c3/api-reference/peripherals/gpio.html).
   - Showcasing the display and library: [Video](https://youtu.be/KZGjsC-JkR8?si=c3sMc7xT4hFs9A2L).
     And the code they used: [GitHub](https://github.com/devtales-official/screen-test/tree/main/devtales_screentest_ep2).
   - Generating new fonts: [Adafruit Documentation](https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts).
@@ -117,6 +119,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Built in adc calibration: [Reddit](https://www.reddit.com/r/esp32/comments/1dybanl/measuring_battery_levels/).
   - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
   - Rebooting with persistent RTC memory: [Reddit](https://www.reddit.com/r/esp32/comments/qokk1z/reboot_without_losing_rtc_variables/).
+  - ESP-C3 supermini pinout: [Arduino Forum Thread](https://forum.arduino.cc/t/esp32-c3-supermini-pinout/1189850/23).
 
 ## Ports, Future Updates
 
