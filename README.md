@@ -81,6 +81,8 @@ If you just want to look at the schematic, you can use the pdf.
   - ~~Not all pins can wake up from deep sleep.~~
   - ~~Should prefer ADC1 for battery readings.~~
   - Testing, measuring points.
+  - Move LED to use auxiliary ground.
+  - Separate auxiliary ground enables.
 
 ## Setup
 
