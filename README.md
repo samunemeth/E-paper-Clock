@@ -37,6 +37,15 @@ use a search on the main part of the code.
 > I try to document the code as much as I can, but if you have any questions,
 > feel free to contact me.
 
+## PCB
+
+The current version **(V5)** of the PCB can be found in the *mainboard* folder.
+There are also gerber files, specifically exported for production with [*JLCPCB*](https://jlcpcb.com/).
+If you just want to look at the schematic, you can use the pdf.
+
+> [!NOTE]
+> The PCB is still not finished, and **V5** has **not** been tested yet!
+
 ## ToDo
 
 **Implement**
