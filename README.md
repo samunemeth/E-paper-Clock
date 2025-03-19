@@ -6,9 +6,9 @@
 > but there are a lot, so it will take time.
 
 
-# E-papper Clock 
+# E-paper Clock 
 
-This is an e-papper clock based on a *WeAct Studio 2.9" BW* display, and a custom *Weather Station V1* mainboard.
+This is an e-paper clock based on a *WeAct Studio 2.9" BW* display, and a custom *Weather Station V1* mainboard.
 
 ## Current functionality
 
