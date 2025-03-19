@@ -55,16 +55,19 @@ If you just want to look at the schematic, you can use the pdf.
   - Show wifi strength at last sync.
   - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
-  - Move to *ESP-IDF*. *(This requires big changes.)*
   - Better fonts, for example *Roboto*.
+
+**Ideas**
+  - Move to *ESP-IDF*? *(This requires big changes.)*
   - Add charging detection?
+  - Add hibernation for night? *(Basically just a longer deep sleep at night.)*
+  - Use external oscillator?
 
 **Test**
   - Check if DHCP supplied time servers work.
   - Check sntp time documentation, if it only gets time once.
   - Test if powering off the display is actually worth it. 
   - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
-  - Use external oscillator?
 
 **Document**
   - Document the font creation process.
@@ -73,11 +76,11 @@ If you just want to look at the schematic, you can use the pdf.
   - Document WiFi setup.
 
 **Hardware Fix**
-  - Buttons have to be active low.
-  - Not all pins can wake up from deep sleep.
-  - Should prefer ADC1 for battery readings.
+  - ~~Separate display and voltage divider power?~~ **=> NO**
+  - ~~Buttons have to be active low.~~
+  - ~~Not all pins can wake up from deep sleep.~~
+  - ~~Should prefer ADC1 for battery readings.~~
   - Testing, measuring points.
-  - Separate display and voltage divider power?
 
 ## Setup
 
@@ -134,9 +137,6 @@ The compromises are not yet fully clear to me, *further testing and investigatio
 
 The display could be reasonably used with *Esphome*. The configuration however is quite difficult, and the power efficiency will 
 definitely be worse. I do not think I will be attempting to port it. I already have code for a [similar project](#related-projects).
-
-I'm already designing a new version of the mainboard. This version will probably have a new pinout, and may not require the global SPI remap. The current board requires some patching, and does not fulfill all my requirements. I will not be uploading this board version,
-but I'm working on the new one, that should work out of the box.
 
 ## Related Projects
 
