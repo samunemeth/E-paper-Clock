@@ -8,7 +8,8 @@
 
 # E-paper Clock 
 
-This is an e-paper clock based on a *WeAct Studio 2.9" BW* display, and a custom *Weather Station V1* mainboard.
+This is an e-paper clock based on a *WeAct Studio 2.9" BW* display,
+and a custom *Weather Station V1* mainboard.
 
 ## Current functionality
 
@@ -20,8 +21,8 @@ enters deep sleep to preserve battery power.
 At set hours, the clock
 will resync to a time server, and it will show the last resync.
 The clock can also monitor it's battery level.
-By pressing the update button, the display is kept awake. After a second press, or
-reset, it continues normal operation.
+By pressing the update button, the display is kept awake.
+After a second press, or reset, it continues normal operation.
 Pressing the top button enables user mode, witch shows the seconds for a set
 amount of time, or until the user presses the button again.
 
@@ -30,8 +31,9 @@ the display when the *ESP* goes to deep sleep: `POWER_DOWN_DISPLAY`
 And an option to prefer fast refreshes where possible: `MAX_USER_SECONDS`
 
 Messages, and time intervals can also be customised without much hassle.
-First look at the settings file `settings.h`, and if you dont find anything there,
-use a search on the main part of the code.
+First look at the settings file `settings.h`,
+and if you don't find anything there,
+do a search on the code.
 
 > [!NOTE]
 > I try to document the code as much as I can, but if you have any questions,
@@ -40,7 +42,8 @@ use a search on the main part of the code.
 ## PCB
 
 The current version **(V5)** of the PCB can be found in the *mainboard* folder.
-There are also gerber files, specifically exported for production with [*JLCPCB*](https://jlcpcb.com/).
+There are also gerber files, specifically exported for production with
+[*JLCPCB*](https://jlcpcb.com/).
 If you just want to look at the schematic, you can use the pdf.
 
 > [!NOTE]
@@ -50,10 +53,11 @@ If you just want to look at the schematic, you can use the pdf.
 
 **Implement**
   - Try to hibernate display.
-  - Use struct for modes.
+  - Use `struct` for modes.
   - Add icons for status bar.
   - Show wifi strength at last sync.
-  - Multiple WiFi connections. *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
+  - Multiple WiFi connections.
+    *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
   - Better fonts, for example *Roboto*.
 
@@ -65,15 +69,15 @@ If you just want to look at the schematic, you can use the pdf.
 
 **Test**
   - Check if DHCP supplied time servers work.
-  - Check sntp time documentation, if it only gets time once.
+  - Check SNTP time documentation, if it only gets time once.
   - Test if powering off the display is actually worth it. 
-  - Test the two different internal oscillators. *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
+  - Test the two different internal oscillators.
+    *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
 
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
   - Document global SPI port remapping.
-  - Document WiFi setup.
 
 **Hardware Fix**
   - ~~Separate display and voltage divider power?~~ **=> NO**
@@ -86,13 +90,34 @@ If you just want to look at the schematic, you can use the pdf.
 
 ## Setup
 
-  - Set your WiFi credentials.
-  - Change your port settings in the project file. You can also use auto port detection on windows but *not* on linux.
+  - Copy the `src/wifi_secret.h.outline` file,
+    and rename it to `src/wifi_secret.h`.
+  - Enter your WiFi SSID *(network name)* and password,
+    replacing the placeholder values.
+  - Change your port settings in the project file.
+    You can also use auto port detection on windows but *not* on linux.
   - Select the correct environment for uploading:
     - With `platformio.run -- environment YourEnvironment` on command line.
     - By selecting the correct folder in *VSCode*.
 
 ## Design Choices
+
+### Global SPI Port Remapping
+
+As the default SPI pins on the *ESP32-C3 Supermini* are located in
+locations unsuitable for this project, as they use important pins in
+the RTC pin domain. These are the pins that can be used for wakeup
+from deep sleep, and the pins that can be held during deep sleep.
+As these pins are needed for other applications, we need to remap the
+SPI pins to less important ones.
+
+The port remapping is done by modifying the default `pins_arduino.h`
+configuration file. Thankfully this can be done on a per-project basis.
+The location of the configuration file is changed to the local one with
+the  `board_build.variants_dir = variants` option.
+
+To view the new pin configuration, check out the file.
+
 
 ### Modes
 
