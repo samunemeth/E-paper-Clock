@@ -77,7 +77,6 @@ If you just want to look at the schematic, you can use the pdf.
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
-  - Document global SPI port remapping.
 
 **Hardware Fix**
   - ~~Separate display and voltage divider power?~~ **=> NO**
@@ -116,7 +115,8 @@ configuration file. Thankfully this can be done on a per-project basis.
 The location of the configuration file is changed to the local one with
 the  `board_build.variants_dir = variants` option.
 
-To view the new pin configuration, check out the file.
+To view the new pin configuration, check out the file:
+[`pins_arduino.h`.](variants/lolin_c3_mini/pins_arduino.h)
 
 
 ### Modes
