@@ -135,7 +135,7 @@ A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
 The project is currently uses the *8MD256* clock source over the default *RC* oscillator.
 This is presumably more accurate, but uses more power, and only lets the ESP enter a lower
-level of deep sleep. More info on [sub sleep levels](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
+level of deep sleep *(look at: Sub sleep levels)*.
 The compromises are not yet fully clear to me, *further testing and investigation is required*.
 
 
@@ -159,6 +159,7 @@ The compromises are not yet fully clear to me, *further testing and investigatio
   - Estimating battery percentage from voltage: [Desmos](https://www.desmos.com/calculator/tfllnkhdcv), [Reference Data](https://blog.ampow.com/lipo-voltage-chart/).
   - Rebooting with persistent RTC memory: [Reddit](https://www.reddit.com/r/esp32/comments/qokk1z/reboot_without_losing_rtc_variables/).
   - ESP-C3 supermini pinout: [Arduino Forum Thread](https://forum.arduino.cc/t/esp32-c3-supermini-pinout/1189850/23).
+  - Sub sleep levels: [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
 
 ## Ports, Future Updates
 
