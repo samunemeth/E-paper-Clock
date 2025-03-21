@@ -89,10 +89,10 @@ If you just want to look at the schematic, you can use the pdf.
 
 ## Setup
 
-  - Copy the `src/wifi_secret.h.outline` file,
+  - Copy the [`src/wifi_secret.h.outline`](src/wifi_secret.h.outline) file,
     and rename it to `src/wifi_secret.h`.
   - Enter your WiFi SSID *(network name)* and password,
-    replacing the placeholder values.
+    replacing the placeholder values in `src/wifi_secret.h`.
   - Change your port settings in the project file.
     You can also use auto port detection on windows but *not* on linux.
   - Select the correct environment for uploading:
@@ -116,7 +116,7 @@ The location of the configuration file is changed to the local one with
 the  `board_build.variants_dir = variants` option.
 
 To view the new pin configuration, check out the file:
-[`pins_arduino.h`.](variants/lolin_c3_mini/pins_arduino.h)
+[`pins_arduino.h`](variants/lolin_c3_mini/pins_arduino.h).
 
 
 ### Modes
