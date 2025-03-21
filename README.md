@@ -39,6 +39,7 @@ do a search on the code.
 > I try to document the code as much as I can, but if you have any questions,
 > feel free to contact me.
 
+
 ## PCB
 
 The current version **(V5)** of the PCB can be found in the *mainboard* folder.
@@ -48,6 +49,25 @@ If you just want to look at the schematic, you can use the pdf.
 
 > [!NOTE]
 > The PCB is still not finished, and **V5** has **not** been tested yet!
+
+
+## Setup
+
+  - Copy the [`src/wifi_secret.h.outline`](src/wifi_secret.h.outline) file,
+    and rename it to `src/wifi_secret.h`.
+  - Enter your WiFi SSID *(network name)* and password,
+    replacing the placeholder values in `src/wifi_secret.h`.
+  - Change your port settings in the project file.
+    You can also use auto port detection on windows but *not* on linux.
+  - Select the correct environment for uploading:
+    - With `platformio.run -- environment YourEnvironment` on command line.
+    - By selecting the correct folder in *VSCode*.
+  - I recommend using the default settings for the first upload.
+    After that, you can change the settings in the
+    [`settings.h`](src/settings.h) file by commenting or uncommenting
+    definitions, or by changing values. A short explanation of options
+    are included in the file.
+
 
 ## ToDo
 
@@ -87,17 +107,6 @@ If you just want to look at the schematic, you can use the pdf.
   - Move LED to use auxiliary ground.
   - Separate auxiliary ground enables.
 
-## Setup
-
-  - Copy the [`src/wifi_secret.h.outline`](src/wifi_secret.h.outline) file,
-    and rename it to `src/wifi_secret.h`.
-  - Enter your WiFi SSID *(network name)* and password,
-    replacing the placeholder values in `src/wifi_secret.h`.
-  - Change your port settings in the project file.
-    You can also use auto port detection on windows but *not* on linux.
-  - Select the correct environment for uploading:
-    - With `platformio.run -- environment YourEnvironment` on command line.
-    - By selecting the correct folder in *VSCode*.
 
 ## Design Choices
 
