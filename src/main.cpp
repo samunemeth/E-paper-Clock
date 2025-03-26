@@ -102,7 +102,7 @@ void setup() {
     }
 
     // Rotate mode variable to last mode.
-    uint8_t last_mode = mode;
+    const uint8_t last_mode = mode;
 
     // Check if we have a valid desired mode.
     if (desired_mode == NORMAL_MODE ||
@@ -127,27 +127,25 @@ void setup() {
     pinMode(OTA_SW_PIN, INPUT_PULLUP);
     pinMode(BTN_TOP_PIN, INPUT_PULLUP);
 
-    // If we woken up from deep sleep, investigate the cause.
-    if (reset_cause == ESP_RST_DEEPSLEEP) {
+    // If we have woken up from deep sleep, investigate the cause.
+    if (reset_cause == ESP_RST_DEEPSLEEP && mode == NULL_MODE) {
 
         // Get the wakeup cause.
         const esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();
 
         // If the timer triggered the wakeup, we can be sure that we are either in normal mode.
-        if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_TIMER)) { mode = NORMAL_MODE; }
+        if ( wakeup_cause == ESP_SLEEP_WAKEUP_TIMER ) { mode = NORMAL_MODE; }
 
         // Here, we can check for a GPIO wakeup, if there is still no mode defined.
-        if (mode == NULL_MODE && (wakeup_cause == ESP_SLEEP_WAKEUP_GPIO)) {
+        else if ( wakeup_cause == ESP_SLEEP_WAKEUP_GPIO ) {
 
             // We can read the GPIO pins connected to the buttons.
             // As the ESP reboots pretty fast, if the press is average length, it will still be pressed here.
             // If the last mode was the same, do not enter update mode again, as this was a button press to exit.
-            bool update_btn_pressed = (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE);
-            bool user_btn_pressed = (digitalRead(BTN_TOP_PIN) == LOW);
-
             // Update mode has a higher priority, we will check that first.
-            if      (update_btn_pressed) { mode = UPDATE_MODE; }
-            else if (user_btn_pressed)   { mode = USER_MODE;   }
+
+            if      ( (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE) ) { mode = UPDATE_MODE; }
+            else if ( digitalRead(BTN_TOP_PIN) == LOW )                                { mode = USER_MODE;   }
 
         }
 
@@ -532,13 +530,12 @@ finalRender:
     getTime();
 
     // Calculate the time for the wakeup, and enable th e timer. There is a margin included.
-    int64_t time_to_sleep = (60L - (int64_t)timeinfo.tm_sec) * 1000000L - ((int64_t)SLEEP_MARGIN * 1000L);
+    const uint64_t time_to_sleep = (60 - timeinfo.tm_sec) * 1000000 - (SLEEP_MARGIN * 1000);
     esp_sleep_enable_timer_wakeup(time_to_sleep);
 
     // Set the pins that will wake up from deep sleep.
     // We check witch one caused the wakeup at the start.
-    esp_deep_sleep_enable_gpio_wakeup(1 << OTA_SW_PIN_NUM, ESP_GPIO_WAKEUP_GPIO_LOW);
-    esp_deep_sleep_enable_gpio_wakeup(1 << BTN_TOP_PIN_NUM, ESP_GPIO_WAKEUP_GPIO_LOW);
+    esp_deep_sleep_enable_gpio_wakeup((1 << OTA_SW_PIN_NUM) + (1 << BTN_TOP_PIN_NUM), ESP_GPIO_WAKEUP_GPIO_LOW);
 
     #if !defined(POWER_DOWN_DISPLAY)
         
