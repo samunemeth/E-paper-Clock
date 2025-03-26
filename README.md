@@ -42,13 +42,16 @@ do a search on the code.
 
 ## PCB
 
-The current version **(V5)** of the PCB can be found in the *mainboard* folder.
+The current version used by the codebase is **V2**.
+
+The newest version **(V6)** of the PCB can be found in the *mainboard* folder.
 There are also gerber files, specifically exported for production with
 [*JLCPCB*](https://jlcpcb.com/).
 If you just want to look at the schematic, you can use the pdf.
 
 > [!NOTE]
-> The PCB is still not finished, and **V5** has **not** been tested yet!
+> The PCB is still not finished, and **V6** has **not** been tested yet!
+> The codebase is still using **V2**!
 
 
 ## Setup
@@ -98,15 +101,6 @@ If you just want to look at the schematic, you can use the pdf.
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
-
-**Hardware Fix**
-  - ~~Separate display and voltage divider power?~~ **=> NO**
-  - ~~Buttons have to be active low.~~
-  - ~~Not all pins can wake up from deep sleep.~~
-  - ~~Should prefer ADC1 for battery readings.~~
-  - Testing, measuring points.
-  - Move LED to use auxiliary ground.
-  - Separate auxiliary ground enables.
 
 
 ## Design Choices
