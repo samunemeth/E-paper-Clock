@@ -184,6 +184,8 @@ The compromises are not yet fully clear to me,
     [Arduino Forum Thread](https://forum.arduino.cc/t/esp32-c3-supermini-pinout/1189850/23).
   - Sub sleep levels:
     [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/sleep_modes.html#sub-sleep-modes).
+  - Optimization:
+    [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32c3/api-guides/performance/speed.html)
 
 ## Ports, Future Updates
 

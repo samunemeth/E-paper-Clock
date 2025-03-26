@@ -209,16 +209,16 @@ void setup() {
     pinMode(BATT_SENSE_PIN, INPUT);
 
     // Get raw measurement with oversampling.
-    float battery_raw;
+    uint32_t battery_raw;
     for (uint8_t i = 0; i < ADC_OVER_SAMPLE_COUNT; i++) {
-        battery_raw += (float)analogRead(BATT_SENSE_PIN);
+        battery_raw += analogRead(BATT_SENSE_PIN);
     }
-    battery_raw = battery_raw / (float)ADC_OVER_SAMPLE_COUNT;
+    battery_raw = battery_raw / ADC_OVER_SAMPLE_COUNT;
 
     // Calibrate the battery voltage reading.
     esp_adc_cal_characteristics_t adc_chars;
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
-    float battery_voltage = ((float)esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) / 1000) * ADC_FACTOR;
+    uint32_t battery_voltage = esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) * ADC_FACTOR;
 
     // Detect critically low battery level, switch to critical mode.
     if (battery_voltage <= CRITICAL_BATTERY_LEVEL) {
@@ -229,18 +229,18 @@ void setup() {
     #if defined(USE_BATTERY_VOLTAGE)
 
         // Convert voltage to a string.
-        sprintf(strf_battery_value_buf, "%.1fV", battery_voltage);
+        sprintf(strf_battery_value_buf, "%04dmV", battery_voltage);
 
     #else
 
         // Calculate battery percent based on an approximation. 
         uint8_t battery_percent;
-        if (battery_voltage >= (4.2 - FULL_BATTERY_TOLERANCE)) {
+        if (battery_voltage >= (4200 - FULL_BATTERY_TOLERANCE)) {
             battery_percent = 100;
-        } else if (battery_voltage >= 3.87) {
-            battery_percent = round(120 * battery_voltage - 404);
-        } else if (battery_voltage > 3.3) {
-            battery_percent = round(113 / (1 + exp(46.3 - 12 * battery_voltage)));
+        } else if (battery_voltage >= 3870) {
+            battery_percent = round(120 * ((float)battery_voltage/1000) - 404);
+        } else if (battery_voltage > 3300) {
+            battery_percent = round(113 / (1 + exp(46.3 - 12 * ((float)battery_voltage/1000))));
         } else {
             battery_percent = 0;
         }
