@@ -56,6 +56,8 @@ If you just want to look at the schematic, you can use the pdf.
 
 ## Setup
 
+  - Install *PlatformIO*.
+  - Clone this repository to your local machine.
   - Copy the [`src/wifi_secret.h.outline`](src/wifi_secret.h.outline) file,
     and rename it to `src/wifi_secret.h`.
   - Enter your WiFi SSID *(network name)* and password,
@@ -63,7 +65,7 @@ If you just want to look at the schematic, you can use the pdf.
   - Change your port settings in the project file.
     You can also use auto port detection on windows but *not* on linux.
   - Select the correct environment for uploading:
-    - With `platformio.run -- environment YourEnvironment` on command line.
+    - With `platformio.run --environment YourEnvironment` on command line.
     - By selecting the correct folder in *VSCode*.
   - I recommend using the default settings for the first upload.
     After that, you can change the settings in the
