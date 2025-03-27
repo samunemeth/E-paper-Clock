@@ -62,7 +62,7 @@ If you just want to look at the schematic, you can use the pdf.
     and rename it to `src/wifi_secret.h`.
   - Enter your WiFi SSID *(network name)* and password,
     replacing the placeholder values in `src/wifi_secret.h`.
-  - Change your port settings in the project file.
+  - Change your port settings in the [`platformio.ini`](platformio.ini) file.
     You can also use auto port detection on windows but *not* on linux.
   - Select the correct environment for uploading:
     - With `platformio.run --environment YourEnvironment` on command line.
