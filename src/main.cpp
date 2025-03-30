@@ -1,6 +1,6 @@
 // --- GxEPD2 Settings ---
 #define ENABLE_GxEPD2_GFX 0
-#define SNTP_GET_SERVERS_FROM_DHCP 1
+//#define SNTP_GET_SERVERS_FROM_DHCP 1
 
 
 // --- Libraries ---
@@ -388,7 +388,7 @@ void setup() {
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
 
         // Configure SNTP time sync.
-        sntp_servermode_dhcp(1);
+        //sntp_servermode_dhcp(1);
         sntp_setservername(1, SNTP_1);
         sntp_setservername(2, SNTP_2);
         sntp_init();
