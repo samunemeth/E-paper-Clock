@@ -42,5 +42,5 @@
 
 uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clock at there hours. (24h format)
 
-#define OMIT_SLEEP              3                              // If there are less than this many seconds to the minute, we wait instead of going to sleep.
+#define OMIT_SLEEP              1                              // If there are less than this many seconds to the minute, we wait instead of going to sleep.
 #define SLEEP_MARGIN            150                            // The processor wakes this many milliseconds up before the designated update time.
