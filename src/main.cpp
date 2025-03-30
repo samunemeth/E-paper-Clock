@@ -81,12 +81,16 @@ void setup() {
     // --- Getting the Mode ---
 
 
-    // To request modes, and store previous modes, and date from before resets, RTC FAST memory is used.
-    // Variables labelled with `RTC_NOINIT_ATTR` are store in RTC FAST memory, and as the "NOINIT" port suggest,
-    // are not cleared on resets. (As opposed to `RTC_DATA_ATTR`, witch only persists after deep sleep.)
+    /*     
+        To request modes, and store previous modes, and date from before resets,
+        RTC FAST memory is used. Variables labelled with `RTC_NOINIT_ATTR` are
+        store in RTC FAST memory, and as the "NOINIT" port suggest, are not
+        cleared on resets.
+        (As opposed to `RTC_DATA_ATTR`, witch only persists after deep sleep.)
 
-    // To filter mangled data after a power on reset, or reset after ax exception,
-    // the variables are cleared unless a soft reset or wakeup occurred.
+        To filter mangled data after a power on reset - or crash -
+        the variables are cleared unless a soft reset or wakeup occurred.
+    */
     
     // Get the reason of the reset.
     const esp_reset_reason_t reset_cause = esp_reset_reason();
@@ -99,8 +103,13 @@ void setup() {
         mode = NULL_MODE;
         last_sync_hour = 0;
         last_sync_minute = 0;
-        strf_last_sync_hour_buf = "  ";
-        strf_last_sync_minute_buf = "  ";
+        
+        /*
+            As there will be a resync after a hard reset, there is no need to
+            initialize the following variables:
+            strf_last_sync_hour_buf;
+            strf_last_sync_minute_buf;
+        */
 
     }
 
