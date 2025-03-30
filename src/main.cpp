@@ -47,11 +47,12 @@ time_t now;
 struct tm timeinfo;
 
 // String buffers
+char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
+char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
+
 char strf_hour_buf[4];
 char strf_minute_buf[4];
 char strf_date_buf[16];
-char strf_last_sync_hour_buf[4];
-char strf_last_sync_minute_buf[4];
 char strf_battery_value_buf[8];
 
 // Loop status
@@ -98,6 +99,8 @@ void setup() {
         mode = NULL_MODE;
         last_sync_hour = 0;
         last_sync_minute = 0;
+        strf_last_sync_hour_buf = "  ";
+        strf_last_sync_minute_buf = "  ";
 
     }
 
@@ -399,6 +402,10 @@ void setup() {
         last_sync_hour = timeinfo.tm_hour;
         last_sync_minute = timeinfo.tm_min;
 
+        // Update the strings
+        sprintf(strf_last_sync_hour_buf, "%02d", last_sync_hour);
+        sprintf(strf_last_sync_minute_buf, "%02d", last_sync_minute);
+
     }
 
     // Display seconds in the user mode.
@@ -624,8 +631,5 @@ void formatStrings() {
     strftime(strf_hour_buf, sizeof(strf_hour_buf), "%H", &timeinfo);
     strftime(strf_minute_buf, sizeof(strf_minute_buf), "%M", &timeinfo);
     strftime(strf_date_buf, sizeof(strf_date_buf), "%F", &timeinfo);
-
-    sprintf(strf_last_sync_hour_buf, "%02d", last_sync_hour);
-    sprintf(strf_last_sync_minute_buf, "%02d", last_sync_minute);
 
 }
