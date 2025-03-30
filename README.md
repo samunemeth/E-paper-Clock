@@ -80,6 +80,7 @@ If you just want to look at the schematic, you can use the pdf.
   - Try to hibernate display.
   - Use `struct` for modes.
   - Mitigate accidental skipping of resync.
+  - Only partial refresh section, not entire display.
   - Add icons for status bar.
   - Show wifi strength at last sync.
   - Multiple WiFi connections.
@@ -88,16 +89,12 @@ If you just want to look at the schematic, you can use the pdf.
   - Better fonts, for example *Roboto*.
 
 **Ideas**
-  - Move to *ESP-IDF*? *(This requires big changes.)*
   - Add charging detection?
   - Add hibernation for night? *(Basically just a longer deep sleep at night.)*
-  - Use external oscillator?
 
 **Test**
-  - Check if DHCP supplied time servers work.
   - Check SNTP time documentation, if it only gets time once.
-  - Test if powering off the display is actually worth it. 
-  - Test the two different internal oscillators.
+  - Test the two different internall, and external oscillators.
     *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
 
 **Document**
@@ -205,5 +202,5 @@ The only hardware difference is the display,
 as that project uses the 3 color version.
 The software however is completely different, as that project uses *Esphome*.
 
-After designing the new mainboard, I will be publishing mor information
+After designing the new mainboard, I will be publishing more information
 and configuration regarding that project, in a separate repo.
