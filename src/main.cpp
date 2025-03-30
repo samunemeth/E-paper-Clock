@@ -36,22 +36,23 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 // --- Global Variables ---
 
-// Persistent values
+// Mode variables in RTC memory
 uint8_t RTC_NOINIT_ATTR desired_mode = NULL_MODE;
 uint8_t RTC_NOINIT_ATTR mode = NULL_MODE;
-uint8_t RTC_NOINIT_ATTR last_sync_hour = 0;
-uint8_t RTC_NOINIT_ATTR last_sync_minute = 0;
 
-// Time
+// Last sync variables in RTC memory
+uint8_t RTC_NOINIT_ATTR last_sync_minute;
+uint8_t RTC_NOINIT_ATTR last_sync_hour;
+char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
+char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
+
+// Time related variables
 time_t now;
 struct tm timeinfo;
 
 // String buffers
-char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
-char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
-
-char strf_hour_buf[4];
-char strf_minute_buf[4];
+char strf_hour_buf[3];
+char strf_minute_buf[3];
 char strf_date_buf[16];
 char strf_battery_value_buf[8];
 
@@ -101,14 +102,15 @@ void setup() {
         // Clear persistent variables.
         desired_mode = RESET_MODE;
         mode = NULL_MODE;
-        last_sync_hour = 0;
-        last_sync_minute = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
             initialize the following variables:
+
             strf_last_sync_hour_buf;
             strf_last_sync_minute_buf;
+            last_sync_hour;
+            last_sync_minute;
         */
 
     }
