@@ -2,7 +2,7 @@
 
 
 // --- Globals ---
-GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=*/ DISP_CS_PIN, /*DC=*/ DISP_DC_PIN, /*RST=*/ DISP_RES_PIN, /*BUSY=*/ DISPLAY_BUSY_PIN));
+GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> RTC_DATA_ATTR display(GxEPD2_290_BS(/*CS=*/ DISP_CS_PIN, /*DC=*/ DISP_DC_PIN, /*RST=*/ DISP_RES_PIN, /*BUSY=*/ DISPLAY_BUSY_PIN));
 
 
 // --- Display Related Functions ---
