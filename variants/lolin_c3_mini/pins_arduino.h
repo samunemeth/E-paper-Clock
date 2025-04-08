@@ -20,9 +20,9 @@ static const uint8_t RX = 20;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 10;
 
-static const uint8_t SS    = 6;        // CHANGED - Default: 5
+static const uint8_t SS    = 9;        // CHANGED - Default: 5
 static const uint8_t MOSI  = 20;       // CHANGED - Default: 4
-static const uint8_t MISO  = 9;        // CHANGED - Default: 3
+static const uint8_t MISO  = 10;       // CHANGED - Default: 3
 static const uint8_t SCK   = 21;       // CHANGED - Default: 2
 
 static const uint8_t A0 = 0;
