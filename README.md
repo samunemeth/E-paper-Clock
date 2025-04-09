@@ -1,15 +1,12 @@
 > [!IMPORTANT]
-> More features are hopefully coming soon!
->
-> This repository is not even close to being finished.
-> I will try to include all the files and useful resources,
-> but there are a lot, so it will take time.
+> This branch is frozen, and will *NOT* receive new updates.
+> A newer board version is required for the newest versions.
 
 
 # E-paper Clock 
 
 This is an e-paper clock based on a *WeAct Studio 2.9" BW* display,
-and a custom *Weather Station V1* mainboard.
+and a custom *Weather Station V2* mainboard.
 
 ## Current functionality
 
