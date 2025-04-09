@@ -159,9 +159,9 @@ void displayInit(bool wipe) {
 
 }
 
-/// @brief Turns off the display.
-void displayOff() {
+/// @brief Hibernates the display.
+void displayHibernate() {
 
-    display.powerOff();
+    display.hibernate();
 
 }

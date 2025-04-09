@@ -237,30 +237,20 @@ void setup() {
         mode = CRITICAL_MODE;
     }
 
-    // Do calculation based on the settings.
-    #if defined(USE_BATTERY_VOLTAGE)
+    // Calculate battery percent based on an approximation. 
+    uint8_t battery_percent;
+    if (battery_voltage >= (4200 - FULL_BATTERY_TOLERANCE)) {
+        battery_percent = 100;
+    } else if (battery_voltage >= 3870) {
+        battery_percent = round(120 * ((float)battery_voltage/1000) - 404);
+    } else if (battery_voltage > 3300) {
+        battery_percent = round(113 / (1 + exp(46.3 - 12 * ((float)battery_voltage/1000))));
+    } else {
+        battery_percent = 0;
+    }
 
-        // Convert voltage to a string.
-        sprintf(strf_battery_value_buf, "%04dmV", battery_voltage);
-
-    #else
-
-        // Calculate battery percent based on an approximation. 
-        uint8_t battery_percent;
-        if (battery_voltage >= (4200 - FULL_BATTERY_TOLERANCE)) {
-            battery_percent = 100;
-        } else if (battery_voltage >= 3870) {
-            battery_percent = round(120 * ((float)battery_voltage/1000) - 404);
-        } else if (battery_voltage > 3300) {
-            battery_percent = round(113 / (1 + exp(46.3 - 12 * ((float)battery_voltage/1000))));
-        } else {
-            battery_percent = 0;
-        }
-
-        // Round, and convert to a string.
-        sprintf(strf_battery_value_buf, "%d%%", battery_percent);
-
-    #endif /* USE_BATTERY_VOLTAGE */
+    // Round, and convert to a string.
+    sprintf(strf_battery_value_buf, "%d%%", battery_percent);
 
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
@@ -277,18 +267,18 @@ void setup() {
     if (mode == CRITICAL_MODE) {
 
         // Draw to display
-        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+        #if !defined(AUX_FOR_DISP) && defined(PREFER_FAST_REFRESH)
             displayStartDraw(/*fast=*/ true);
         #else
             displayStartDraw();
-        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
+        #endif /* !AUX_FOR_DISP && PREFER_FAST_REFRESH */
 
         displayRenderCriticalMessage();
 
         displayEndDraw();
 
         // Turn off the display and auxiliary power. We do not need them any more.
-        displayOff();
+        displayHibernate();
         digitalWrite(AUX_PWR_PIN, LOW);
 
         // Disable wakeup sources
@@ -316,18 +306,18 @@ void setup() {
         attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intNormalMode, FALLING);
 
         // Draw to display
-        #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
+        #if !defined(AUX_FOR_DISP) && defined(PREFER_FAST_REFRESH)
             displayStartDraw(/*fast=*/ true);
         #else
             displayStartDraw();
-        #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
+        #endif /* !AUX_FOR_DISP && PREFER_FAST_REFRESH */
 
         displayRenderUpdateMessage();
 
         displayEndDraw();
 
         // Turn off the display and auxiliary power. We do not need them any more.
-        displayOff();
+        displayHibernate();
         digitalWrite(AUX_PWR_PIN, LOW);
 
         // Block all other tasks.
@@ -341,48 +331,10 @@ void setup() {
     // we display a message, or just clear the display.
     if (mode == RESET_MODE) {
         
-        #if defined(PREFER_FAST_REFRESH)
-            displayStartDraw(/*fast=*/ true);
-        #else
-            displayStartDraw();
-        #endif /* PREFER_FAST_REFRESH */
-        
-        #if defined(DISPLAY_START_MESSAGE)
-            displayRenderClaim((char*)"STARTING");
-        #endif /* DISPLAY_START_MESSAGE */
-
+        displayStartDraw(/*fast=*/ true);
         displayEndDraw();
 
     }
-
-    // If we are in resync single refresh mode, we can skip this part.
-    #if !defined(RESYNC_SINGLE_REFRESH)
-
-        // If we are in RESYNC mode, we already know the approximate time.
-        // Display that and a flag indicating the resync.
-        if (mode == RESYNC_MODE) {
-
-            // Format the time.
-            formatStrings();
-
-            // Draw to display.
-            #if !defined(POWER_DOWN_DISPLAY) && defined(PREFER_FAST_REFRESH)
-                displayStartDraw(/*fast=*/ true);
-            #else
-                displayStartDraw();
-            #endif /* !POWER_DOWN_DISPLAY && PREFER_FAST_REFRESH */
-
-            displayRenderBorders();
-            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
-            displayRenderTime(strf_hour_buf, strf_minute_buf);
-            displayRenderDate(strf_date_buf);
-
-            displayRenderFlag((char*)"RESYNC");
-
-            displayEndDraw();
-
-        }
-    #endif
 
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
@@ -422,9 +374,9 @@ void setup() {
     // Display seconds in the user mode.
     if (mode == USER_MODE) {
 
-        // If we are powering the display down, or not preferring fast refresh,
+        // If we are powering the display down,
         // a full refresh is required first.
-        #if defined(POWER_DOWN_DISPLAY) || !defined(PREFER_FAST_REFRESH)
+        #if defined(AUX_FOR_DISP)
 
             // Format time for display
             getTime();
@@ -440,7 +392,7 @@ void setup() {
         
             displayEndDraw();
 
-        #endif /* POWER_DOWN_DISPLAY || !PREFER_FAST_REFRESH */
+        #endif /* AUX_FOR_DISP */
 
 
         
@@ -506,14 +458,11 @@ finalRender:
 
     // Print the time to the display
     #if defined(PREFER_FAST_REFRESH)
-        #if defined(POWER_DOWN_DISPLAY)
+        #if defined(AUX_FOR_DISP)
 
             // See if a fast refresh can be done.
             bool do_fast_refresh = false;
             do_fast_refresh = (mode == RESET_MODE) || (mode == USER_MODE);
-            #if !defined(RESYNC_SINGLE_REFRESH)
-                do_fast_refresh = do_fast_refresh || (mode == RESYNC_MODE);
-            #endif /* !RESYNC_SINGLE_REFRESH */
 
             // If we can, do a fast refresh.
             displayStartDraw(/*fast=*/ do_fast_refresh);
@@ -522,7 +471,7 @@ finalRender:
 
             displayStartDraw(/*fast=*/ true);
             
-        #endif /* POWER_DOWN_DISPLAY */
+        #endif /* AUX_FOR_DISP */
     #else
         
         displayStartDraw();
@@ -536,14 +485,12 @@ finalRender:
 
     displayEndDraw();
 
-    #if defined(POWER_DOWN_DISPLAY)
+    // Make the display go into deep sleep.
+    displayHibernate();
     
-        // Turn off the display and auxiliary power. We do not need them any more.
-        displayOff();
-        digitalWrite(AUX_PWR_PIN, LOW);
+    // Power down all peripherals.
+    digitalWrite(AUX_PWR_PIN, LOW);
         
-    #endif /* POWER_DOWN_DISPLAY */
-
     // As the display refresh takes time, we have to get the time again.
     getTime();
 
@@ -554,15 +501,6 @@ finalRender:
     // Set the pins that will wake up from deep sleep.
     // We check witch one caused the wakeup at the start.
     esp_deep_sleep_enable_gpio_wakeup((1 << OTA_SW_PIN_NUM) + (1 << BTN_TOP_PIN_NUM), ESP_GPIO_WAKEUP_GPIO_LOW);
-
-    #if !defined(POWER_DOWN_DISPLAY)
-        
-        // Keep the gpio states as is.
-        gpio_deep_sleep_hold_en();
-        gpio_hold_en(AUX_PWR_PIN_NUM);
-
-    #endif /* POWER_DOWN_DISPLAY */
-
 
     // Go into deep sleep.
     // Nothing is run after this.

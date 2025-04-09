@@ -29,4 +29,4 @@ void displayRenderUpdateMessage();
 void displayRenderCriticalMessage();
 
 void displayInit(bool wipe);
-void displayOff();
+void displayHibernate();

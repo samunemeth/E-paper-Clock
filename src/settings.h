@@ -2,25 +2,15 @@
 // --- Behaviour ---
 
 // Uses fast refresh whenever possible. This makes the display a bit less clear, but preserves power.
-#define PREFER_FAST_REFRESH
+//#define PREFER_FAST_REFRESH
 
 // Powers down display in deep sleep.
 // After wakeup, a full refresh must be performed.
-//#define POWER_DOWN_DISPLAY
-
-// Displays "STARTING" text after a reset. Can cause ghosting.
-//#define DISPLAY_START_MESSAGE
-
-// Uses a single refresh instead of two when resyncing.
-// Doesn't display "RESYNC" message.
-#define RESYNC_SINGLE_REFRESH
+//#define AUX_FOR_DISP
 
 // Activates a demo mode, with resyncs every minute.
 // Useful for checking problems with resync mode.
 //#define RESYNC_DEMO
-
-// Displays battery voltage rounded to one decimals, insted of approximated battery precentage.
-//#define USE_BATTERY_VOLTAGE
 
 // The maximum number of seconds to count out in USER mode.
 #define MAX_USER_SECONDS        20
