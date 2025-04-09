@@ -9,7 +9,7 @@
 # E-paper Clock 
 
 This is an e-paper clock based on a *WeAct Studio 2.9" BW* display,
-and a custom *Weather Station V1* mainboard.
+and a custom *Weather Station V6* mainboard.
 
 ## Current functionality
 
@@ -100,6 +100,7 @@ If you just want to look at the schematic, you can use the pdf.
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
+  - Document the two different types of displays.
 
 
 ## Design Choices
