@@ -78,6 +78,8 @@ If you just want to look at the schematic, you can use the pdf.
 
 **Implement**
   - Try to hibernate display.
+  - Full refresh every `x` refreshes.
+  - Read battery every `x` refreshes.
   - Use `struct` for modes.
   - Mitigate accidental skipping of resync.
   - Only partial refresh section, not entire display.
@@ -100,7 +102,38 @@ If you just want to look at the schematic, you can use the pdf.
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
-  - Document the two different types of displays.
+
+
+## Regarding the display...
+
+After ordering multiple display panels from the same
+[AliExpress listing](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme),
+I received two different kinds of display modules.
+from the outside they look almost identical, apart from the part number
+on the display ribbon cable. The older ones are marked *FPC-A005*, while
+the newer ones are marked *FPC-7519rev.b*.
+
+As they are both copies of similar displays, we have to take these numbers
+with a grain of salt. The old one seems to be a copy (and simplification)
+of a 3 color display, while the new one seems to be a copy (and again, 
+simplification) of this
+[Waveshare panel](https://www.waveshare.com/product/2.9inch-e-paper-module.htm).
+While the old display lacks the third color, the new one is missing the
+gray levels. *(Or at least, I could not get it to work...)*
+
+After powering the on, the difference is obvious: the refresh times.
+While the old display takes  around 4s to do a full refresh, the new one only
+takes around 2s, and does not blink as much, making it a lot less distracting.
+The new display does seem to loose quality faster when doing partial
+refreshes.
+For these reasons, I prefer partial refreshes on the old, and
+full refreshes on the new display.
+
+The new display also goes to hibernation, while the old one seems
+to consume around 1mA. I am still testing this aspect.
+
+Despite these differences, the communication and setup for the displays
+are the same, they are a drop-in replacement for each other.
 
 
 ## Design Choices

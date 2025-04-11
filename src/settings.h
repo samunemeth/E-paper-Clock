@@ -1,19 +1,42 @@
 
 // --- Behaviour ---
 
-// Uses fast refresh whenever possible. This makes the display a bit less clear, but preserves power.
+/* 
+    Prefers partial refreshes over full refreshes.
+    On the older, FPC-A005 B/W display:
+      - Full refreshes take 4x the time and power of a partial refresh.
+      - Display remains clear after multiple partial refreshes.
+      - Enable the option!
+    On the newer, FPC-7519rev.b display:
+      - Full refreshes take 2x the time and power of a partial refresh.
+      - Display quality quickly degrades after a few partial refreshes.
+      - Disable the option!
+*/
 //#define PREFER_FAST_REFRESH
 
-// Powers down display in deep sleep.
-// After wakeup, a full refresh must be performed.
+/* 
+    The following options have to be configured as to reflect
+    the solder jumpers connected on the motherboard.
+    Enable options where the jumper is connected to the aux power.
+    The recommended configuration for the new display panel is shown below.
+*/
 //#define AUX_FOR_DISP
+#define AUX_FOR_BATT_SENSE
+#define AUX_FOR_EXT_LED
 
-// Activates a demo mode, with resyncs every minute.
-// Useful for checking problems with resync mode.
+/* 
+    Read the battery after this many boots.
+    As in normal mode a boot occurs approximately every minute,
+    this is basically in minutes.
+*/
+#define BATT_SENSE_EVERY 10
+
+
+/*
+    Activates a demo mode, with resyncs every minute.
+    Useful for checking problems with resync mode.
+*/
 //#define RESYNC_DEMO
-
-// The maximum number of seconds to count out in USER mode.
-#define MAX_USER_SECONDS        20
 
 
 // --- General Settings ---
@@ -34,3 +57,5 @@ uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clo
 
 #define OMIT_SLEEP              1                              // If there are less than this many seconds to the minute, we wait instead of going to sleep.
 #define SLEEP_MARGIN            150                            // The processor wakes this many milliseconds up before the designated update time.
+
+#define MAX_USER_SECONDS        20                             // The maximum number of seconds to count out in USER mode.

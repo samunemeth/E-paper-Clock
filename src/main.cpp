@@ -1,6 +1,5 @@
 // --- GxEPD2 Settings ---
 #define ENABLE_GxEPD2_GFX 0
-//#define SNTP_GET_SERVERS_FROM_DHCP 1
 
 
 // --- Libraries ---
@@ -36,15 +35,19 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 // --- Global Variables ---
 
-// Mode variables in RTC memory
+// Mode variables, and counters in RTC memory
 uint8_t RTC_NOINIT_ATTR desired_mode = NULL_MODE;
 uint8_t RTC_NOINIT_ATTR mode = NULL_MODE;
+uint32_t RTC_NOINIT_ATTR boot_num = 0;
 
 // Last sync variables in RTC memory
 uint8_t RTC_NOINIT_ATTR last_sync_minute;
 uint8_t RTC_NOINIT_ATTR last_sync_hour;
 char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
 char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
+
+// Battery variable in RTC memory
+char RTC_NOINIT_ATTR strf_battery_value_buf[8];
 
 // Time related variables
 time_t now;
@@ -54,7 +57,6 @@ struct tm timeinfo;
 char strf_hour_buf[3];
 char strf_minute_buf[3];
 char strf_date_buf[16];
-char strf_battery_value_buf[8];
 
 // Loop status
 bool loop_running;
@@ -102,6 +104,7 @@ void setup() {
         // Clear persistent variables.
         desired_mode = RESET_MODE;
         mode = NULL_MODE;
+        boot_num = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -111,6 +114,7 @@ void setup() {
             strf_last_sync_minute_buf;
             last_sync_hour;
             last_sync_minute;
+            strf_battery_value_buf;
         */
 
     }
@@ -174,9 +178,13 @@ void setup() {
     // --- Powering Up, Initializing, Detecting Mode Modes ---
 
 
-    // Regardless of the mode, the display will be used right after this.
+    // Setting up the AUX pin for a possible use.
     pinMode(AUX_PWR_PIN, OUTPUT);
-    digitalWrite(AUX_PWR_PIN, HIGH);
+
+    // Turn on aux power if display need it.
+    #if defined(AUX_FOR_DISP)
+        digitalWrite(AUX_PWR_PIN, HIGH);
+    #endif /* AUX_FOR_DISP */
 
     // If we are not in update mode, we can attach the interrupt to the update button.
     if (mode != UPDATE_MODE) {
@@ -217,40 +225,55 @@ void setup() {
 
     }
 
-    // Set the battery voltage pin to input.
-    pinMode(BATT_SENSE_PIN, INPUT);
+    // Measure battery voltage if needed.
+    if (boot_num % BATT_SENSE_EVERY == 0) {
 
-    // Get raw measurement with oversampling.
-    uint32_t battery_raw;
-    for (uint8_t i = 0; i < ADC_OVER_SAMPLE_COUNT; i++) {
-        battery_raw += analogRead(BATT_SENSE_PIN);
+        // Turn on the aux power if the voltage divider needs it.
+        #if defined(AUX_FOR_BATT_SENSE)
+            digitalWrite(AUX_PWR_PIN, HIGH);
+        #endif /* AUX_FOR_BATT_SENSE */
+
+        // Set the battery voltage pin to input.
+        pinMode(BATT_SENSE_PIN, INPUT);
+
+        // Get raw measurement with oversampling.
+        uint32_t battery_raw;
+        for (uint8_t i = 0; i < ADC_OVER_SAMPLE_COUNT; i++) {
+            battery_raw += analogRead(BATT_SENSE_PIN);
+        }
+        battery_raw = battery_raw / ADC_OVER_SAMPLE_COUNT;
+
+        // Calibrate the battery voltage reading.
+        esp_adc_cal_characteristics_t adc_chars;
+        esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
+        uint32_t battery_voltage = esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) * ADC_FACTOR;
+
+        // Turn off the aux power if display does not need it.
+        #if !defined(AUX_FOR_DISP)
+            digitalWrite(AUX_PWR_PIN, LOW);
+        #endif /* !AUX_FOR_DISP */
+
+        // Detect critically low battery level, switch to critical mode.
+        if (battery_voltage <= CRITICAL_BATTERY_LEVEL) {
+            mode = CRITICAL_MODE;
+        }
+
+        // Calculate battery percent based on an approximation. 
+        uint8_t battery_percent;
+        if (battery_voltage >= (4200 - FULL_BATTERY_TOLERANCE)) {
+            battery_percent = 100;
+        } else if (battery_voltage >= 3870) {
+            battery_percent = round(120 * ((float)battery_voltage/1000) - 404);
+        } else if (battery_voltage > 3300) {
+            battery_percent = round(113 / (1 + exp(46.3 - 12 * ((float)battery_voltage/1000))));
+        } else {
+            battery_percent = 0;
+        }
+
+        // Round, and convert to a string.
+        sprintf(strf_battery_value_buf, "%d%%", battery_percent);
+
     }
-    battery_raw = battery_raw / ADC_OVER_SAMPLE_COUNT;
-
-    // Calibrate the battery voltage reading.
-    esp_adc_cal_characteristics_t adc_chars;
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
-    uint32_t battery_voltage = esp_adc_cal_raw_to_voltage(battery_raw, &adc_chars) * ADC_FACTOR;
-
-    // Detect critically low battery level, switch to critical mode.
-    if (battery_voltage <= CRITICAL_BATTERY_LEVEL) {
-        mode = CRITICAL_MODE;
-    }
-
-    // Calculate battery percent based on an approximation. 
-    uint8_t battery_percent;
-    if (battery_voltage >= (4200 - FULL_BATTERY_TOLERANCE)) {
-        battery_percent = 100;
-    } else if (battery_voltage >= 3870) {
-        battery_percent = round(120 * ((float)battery_voltage/1000) - 404);
-    } else if (battery_voltage > 3300) {
-        battery_percent = round(113 / (1 + exp(46.3 - 12 * ((float)battery_voltage/1000))));
-    } else {
-        battery_percent = 0;
-    }
-
-    // Round, and convert to a string.
-    sprintf(strf_battery_value_buf, "%d%%", battery_percent);
 
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
@@ -285,8 +308,9 @@ void setup() {
         esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
 
         // Stop pin holding
-        gpio_hold_dis(AUX_PWR_PIN_NUM);
-        gpio_deep_sleep_hold_dis();
+        // There is no pin holding in this version.
+        //gpio_hold_dis(AUX_PWR_PIN_NUM);
+        //gpio_deep_sleep_hold_dis();
 
         // Go into INDEFINITE deep sleep. (Basically shut down.)
         // Nothing is run after this.
@@ -296,13 +320,17 @@ void setup() {
 
     // If we are in update mode, we basically have to stall the processor.
     if (mode == UPDATE_MODE) {
+
+        // Turn on aux power for external led if needed.
+        #if defined(AUX_FOR_EXT_LED)
+            digitalWrite(AUX_PWR_PIN, HIGH);
+        #endif /* AUX_FOR_EXT_LED */
   
         // Turn on led
         pinMode(EXT_LED_PIN, OUTPUT);
         digitalWrite(EXT_LED_PIN, LOW);
 
-        // Turn the update button into an additional reset button
-        // This may be causing issues. For now, the interrupt will just be detached.
+        // Turn the update button into a button returning to normal mode.
         attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intNormalMode, FALLING);
 
         // Draw to display
@@ -340,7 +368,6 @@ void setup() {
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
 
         // Configure SNTP time sync.
-        //sntp_servermode_dhcp(1);
         sntp_setservername(1, SNTP_1);
         sntp_setservername(2, SNTP_2);
         sntp_init();
