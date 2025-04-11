@@ -99,6 +99,7 @@ void setup() {
     const esp_reset_reason_t reset_cause = esp_reset_reason();
 
     // If we were not soft reset, or woken up from deep sleep, we have to wipe some variables.
+    // In case of any other wakeup, we need to increment the boot number.
     if ((reset_cause != ESP_RST_DEEPSLEEP) && (reset_cause != ESP_RST_SW)) {
 
         // Clear persistent variables.
@@ -116,6 +117,10 @@ void setup() {
             last_sync_minute;
             strf_battery_value_buf;
         */
+
+    } else {
+
+        boot_num++;
 
     }
 
