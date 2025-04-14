@@ -30,13 +30,16 @@
     this is basically in minutes.
 */
 #define BATT_SENSE_EVERY 10
+#define TEMP_EVERY       10
 
 
 /*
     Activates a demo mode, with resyncs every minute.
     Useful for checking problems with resync mode.
+    Skips resyncs, to be farter for testing.
 */
 //#define RESYNC_DEMO
+//#define SKIP_RESYNC
 
 
 // --- General Settings ---
