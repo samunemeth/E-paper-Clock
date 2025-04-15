@@ -28,7 +28,7 @@ amount of time, or until the user presses the button again.
 
 The settings can be configured easily. There is an option to power down
 the display when the *ESP* goes to deep sleep: `POWER_DOWN_DISPLAY`
-And an option to prefer fast refreshes where possible: `MAX_USER_SECONDS`
+And an option to prefer fast refreshes where possible: `MAX_DISPLAYED_SECONDS`
 
 Messages, and time intervals can also be customised without much hassle.
 First look at the settings file `settings.h`,
@@ -162,10 +162,10 @@ Modes are stored in a `uint8_t`, and have constants with their names
 and a `*_MODE` suffix.
 A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
-| Mode Name: | NULL | NORMAL | UPDATE | USER | RESET | RESYNC | CRITICAL |
-| ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 | 32 |
-| Bit shifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 |
+| Mode Name: | NULL | RESET | NORMAL | RESYNC | SECONDS | STOPPER | UPDATE | CRITICAL |
+| ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Decimal Value: | 0 | 1 | 2 | 4 | 8 | 16 | 32 | 64 |
+| Bit shifted Value: | 0 | 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6 |
 
  
 ### Timer Choice

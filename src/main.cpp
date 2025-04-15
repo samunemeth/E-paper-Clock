@@ -26,12 +26,13 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 // --- Mode Numbering ---
 #define NULL_MODE     0
-#define NORMAL_MODE   1 << 0
-#define UPDATE_MODE   1 << 1
-#define USER_MODE     1 << 2
-#define RESET_MODE    1 << 3
-#define RESYNC_MODE   1 << 4
-#define CRITICAL_MODE 1 << 5
+#define RESET_MODE    1 << 0
+#define NORMAL_MODE   1 << 1
+#define RESYNC_MODE   1 << 2
+#define SECONDS_MODE  1 << 3
+#define STOPPER_MODE  1 << 4
+#define UPDATE_MODE   1 << 5
+#define CRITICAL_MODE 1 << 6
 
 // --- Global Variables ---
 
@@ -67,7 +68,7 @@ bool loop_running;
 
 // Interrupt functions.
 void IRAM_ATTR intUpdateMode();
-void IRAM_ATTR intUserMode();
+void IRAM_ATTR intSecondsMode();
 void IRAM_ATTR intNormalMode();
 void IRAM_ATTR intLoopStop();
 
@@ -130,7 +131,7 @@ void setup() {
     // Check if we have a valid desired mode.
     if (desired_mode == NORMAL_MODE ||
         desired_mode == UPDATE_MODE ||
-        desired_mode == USER_MODE || 
+        desired_mode == SECONDS_MODE || 
         desired_mode == RESET_MODE) {
 
         // Set that as our current mode.
@@ -168,7 +169,7 @@ void setup() {
             // Update mode has a higher priority, we will check that first.
 
             if      ( (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE) ) { mode = UPDATE_MODE; }
-            else if ( digitalRead(BTN_TOP_PIN) == LOW )                                { mode = USER_MODE;   }
+            else if ( digitalRead(BTN_TOP_PIN) == LOW )                                { mode = SECONDS_MODE;   }
 
         }
 
@@ -196,9 +197,9 @@ void setup() {
         attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intUpdateMode, FALLING);
     }
 
-    // If we are in normal mode, we can attach the interrupt to the user button.
+    // If we are in normal mode, we can attach the interrupt to the top button.
     if (mode == NORMAL_MODE) {
-        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intUserMode, FALLING);
+        attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intSecondsMode, FALLING);
     }
 
     // Configure the time zone, regardless of the mode. We have to do it either way.
@@ -403,8 +404,8 @@ void setup() {
 
     }
 
-    // Display seconds in the user mode.
-    if (mode == USER_MODE) {
+    // Display seconds in the seconds mode.
+    if (mode == SECONDS_MODE) {
 
         // If we are powering the display down,
         // a full refresh is required first.
@@ -431,12 +432,12 @@ void setup() {
         // Loop and print seconds
         loop_running = true;
         uint8_t last_second = timeinfo.tm_sec;
-        for (uint8_t i = 0; i < MAX_USER_SECONDS; i++) {
+        for (uint8_t i = 0; i < MAX_DISPLAYED_SECONDS; i++) {
 
             if (i == 2) {
 
                 // Attach a loop stopping interrupt to the button.
-                // This is done here to mitigate the issue of the user mode instantly quitting
+                // This is done here to mitigate the issue of the seconds mode instantly quitting
                 // when the button is pressed for a bit too long.
                 attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intLoopStop, FALLING);
 
@@ -494,7 +495,7 @@ finalRender:
 
             // See if a fast refresh can be done.
             bool do_fast_refresh = false;
-            do_fast_refresh = (mode == RESET_MODE) || (mode == USER_MODE);
+            do_fast_refresh = (mode == RESET_MODE) || (mode == SECONDS_MODE);
 
             // If we can, do a fast refresh.
             displayStartDraw(/*fast=*/ do_fast_refresh);
@@ -558,10 +559,10 @@ void IRAM_ATTR intUpdateMode() {
 
 }
 
-void IRAM_ATTR intUserMode() {
+void IRAM_ATTR intSecondsMode() {
 
-    // Set desired mode to user mode.
-    desired_mode = USER_MODE;
+    // Set desired mode to seconds mode.
+    desired_mode = SECONDS_MODE;
 
     // Restart.
     esp_restart();
