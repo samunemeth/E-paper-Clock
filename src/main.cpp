@@ -8,7 +8,6 @@
 
 #include <esp_sntp.h>
 #include <esp_adc_cal.h>
-#include <driver/temp_sensor.h>
 
 
 // --- Settings and Pins ---
@@ -49,7 +48,6 @@ char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
-char RTC_NOINIT_ATTR strf_temp_value_buf[8];
 
 // Time related variables
 time_t now;
@@ -118,7 +116,6 @@ void setup() {
             last_sync_hour;
             last_sync_minute;
             strf_battery_value_buf;
-            strf_temp_value_buf;
         */
 
     } else {
@@ -283,28 +280,6 @@ void setup() {
 
     }
 
-    /* 
-    // Measure temperature if needed
-    if (boot_num % TEMP_EVERY == 0) {
-
-        temp_sensor_config_t temp_sensor = TSENS_CONFIG_DEFAULT();
-        temp_sensor.dac_offset = TSENS_DAC_L2;  // TSENS_DAC_L2 is default; L4(-40°C ~ 20°C), L2(-10°C ~ 80°C), L1(20°C ~ 100°C), L0(50°C ~ 125°C)
-        temp_sensor_set_config(temp_sensor);
-        temp_sensor_start();
-
-        // Get converted sensor data.
-        float temp_value;
-        temp_sensor_read_celsius(&temp_value);
-
-        // Round, convert to a string.
-        sprintf(strf_temp_value_buf, "%.0fC", temp_value);
-
-        // Disable the temperature sensor.
-        temp_sensor_stop();
-
-    }
-    */
-
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
 
@@ -395,7 +370,6 @@ void setup() {
     }
 
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
-    #if !defined(SKIP_RESYNC)
     if (mode == RESET_MODE || mode == RESYNC_MODE) {
 
         // Configure SNTP time sync.
@@ -428,7 +402,6 @@ void setup() {
         sprintf(strf_last_sync_minute_buf, "%02d", last_sync_minute);
 
     }
-    #endif /* !SKIP_RESYNC */
 
     // Display seconds in the user mode.
     if (mode == USER_MODE) {
@@ -445,7 +418,7 @@ void setup() {
             displayStartDraw();
 
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_value_buf, strf_temp_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
         
@@ -477,7 +450,7 @@ void setup() {
             displayStartDraw(/*fast=*/ true);
             
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_value_buf, strf_temp_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
             displayRenderSecond(timeinfo.tm_sec);
@@ -538,7 +511,7 @@ finalRender:
     #endif /* PREFER_FAST_REFRESH */
 
     displayRenderBorders();
-    displayRenderStatusBar(strf_battery_value_buf, strf_temp_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+    displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
     displayRenderTime(strf_hour_buf, strf_minute_buf);
     displayRenderDate(strf_date_buf);
 
