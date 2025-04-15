@@ -9,31 +9,25 @@
 # E-paper Clock 
 
 This is an e-paper clock based on a *WeAct Studio 2.9" BW* display,
-and a custom *Weather Station V6* mainboard.
+and a custom *Info Station V6* mainboard.
 
 ## Current functionality
 
 The clock can connect to a local network to get the time hen powered on.
 After this, and internal timer is calibrated to the current timezone.
 The display is refreshed every minute. Between the refreshes, the *ESP32-C3*
-enters deep sleep to preserve battery power.
+and the display enters deep sleep to preserve battery power.
 
 At set hours, the clock
 will resync to a time server, and it will show the last resync.
 The clock can also monitor it's battery level.
-By pressing the update button, the display is kept awake.
-After a second press, or reset, it continues normal operation.
-Pressing the top button enables user mode, witch shows the seconds for a set
-amount of time, or until the user presses the button again.
+By pressing the update button, the display is kept awake to 
+be able to remain connected to a computer, and receive and update easily.
+Pressing the top button enables seconds mode, witch shows the seconds for a set
+amount of time, or until the button is pressed again.
 
-The settings can be configured easily. There is an option to power down
-the display when the *ESP* goes to deep sleep: `POWER_DOWN_DISPLAY`
-And an option to prefer fast refreshes where possible: `MAX_DISPLAYED_SECONDS`
-
-Messages, and time intervals can also be customised without much hassle.
-First look at the settings file `settings.h`,
-and if you don't find anything there,
-do a search on the code.
+Settings can be configures easily in the [`settings.h`](src/settings.h) file.
+Descriptions and recommendations are written next to important options.
 
 > [!NOTE]
 > I try to document the code as much as I can, but if you have any questions,
@@ -42,16 +36,16 @@ do a search on the code.
 
 ## PCB
 
-The current version used by the codebase is **V2**.
+The current version used by the codebase is **V6**.
 
-The newest version **(V6)** of the PCB can be found in the *mainboard* folder.
+The PCB can be found in the *mainboard* folder.
 There are also gerber files, specifically exported for production with
 [*JLCPCB*](https://jlcpcb.com/).
 If you just want to look at the schematic, you can use the pdf.
 
 > [!NOTE]
-> The PCB is still not finished, and **V6** has **not** been tested yet!
-> The codebase is still using **V2**!
+> The main branch is using the **V6** motherboard.
+> If you want to use a **V2** motherboard, check out the dedicated branch.
 
 
 ## Setup
@@ -77,12 +71,10 @@ If you just want to look at the schematic, you can use the pdf.
 ## ToDo
 
 **Implement**
-  - Try to hibernate display.
-  - Full refresh every `x` refreshes.
-  - Read battery every `x` refreshes.
-  - Use `struct` for modes.
+  - Add charging detection.
+  - Add stopper mode.
   - Mitigate accidental skipping of resync.
-  - Only partial refresh section, not entire display.
+  - Use `struct` for modes.
   - Add icons for status bar.
   - Show wifi strength at last sync.
   - Multiple WiFi connections.
@@ -91,20 +83,26 @@ If you just want to look at the schematic, you can use the pdf.
   - Better fonts, for example *Roboto*.
 
 **Ideas**
-  - Add charging detection?
   - Add hibernation for night? *(Basically just a longer deep sleep at night.)*
+  - Indicate potential drift based on time from last sync.
 
 **Test**
   - Check SNTP time documentation, if it only gets time once.
-  - Test the two different internall, and external oscillators.
+  - Test the three different internall, and external oscillators.
     *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
+  - Test power consumption with different configurations.
+  - Ways to connect to WiFi faster, like storing the channel number, or setting
+  up a persistent wifi connection.
 
 **Document**
   - Document the font creation process.
   - Document assembly and schematics.
+  - Document 3D printed parts.
 
 
-## Regarding the display...
+## Regarding the display
+
+### Differences
 
 After ordering multiple display panels from the same
 [AliExpress listing](https://www.aliexpress.com/item/1005004644515880.html?spm=a2g0o.order_list.order_list_main.89.31de1802V2DEme),
@@ -112,6 +110,7 @@ I received two different kinds of display modules.
 from the outside they look almost identical, apart from the part number
 on the display ribbon cable. The older ones are marked *FPC-A005*, while
 the newer ones are marked *FPC-7519rev.b*.
+The displays have the same [documentation provided by WeAct Studio](https://github.com/WeActStudio/WeActStudio.EpaperModule/blob/master/Doc/ZJY128296-029EAAMFGN.pdf).
 
 As they are both copies of similar displays, we have to take these numbers
 with a grain of salt. The old one seems to be a copy (and simplification)
@@ -134,6 +133,26 @@ to consume around 1mA. I am still testing this aspect.
 
 Despite these differences, the communication and setup for the displays
 are the same, they are a drop-in replacement for each other.
+
+### Display health
+
+As *WeAct Studio* does not provide any information regarding display health,
+I will be referencing [Waveshare's display health information](https://www.waveshare.com/wiki/2.9inch_e-Paper_Module_Manual#Precautions)
+for a very similar display.
+
+It suggest full refreshing every *"several"* partial refreshes.
+As *several* is not too exact, I would go with 5-10 partial refreshes for a
+full refresh
+However, after running one of the older displays for around 2 months with
+only fast refreshes, I do not see any mayor degradation.
+
+It also recommends a refresh interval of *"at least 180s"*.
+That will not happen for a clock of course, but again I do not see
+any particular reason this should affect the display in any negative way.
+
+They also suggest powering down the display, or putting it in deep sleep.
+This of course is done as soon as possible, and is an understandable
+requirement.
 
 
 ## Design Choices
@@ -160,7 +179,6 @@ To view the new pin configuration, check out the file:
 
 Modes are stored in a `uint8_t`, and have constants with their names
 and a `*_MODE` suffix.
-A wanted mode can be written to EEPROM, to be selected on the next reboot.
 
 | Mode Name: | NULL | RESET | NORMAL | RESYNC | SECONDS | STOPPER | UPDATE | CRITICAL |
 | ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -170,10 +188,10 @@ A wanted mode can be written to EEPROM, to be selected on the next reboot.
  
 ### Timer Choice
 
-The project is currently uses the *8MD256* clock source over the default
-*RC* oscillator. This is presumably more accurate, but uses more power,
-and only lets the ESP enter a lower level of deep sleep
-*(look at: Sub sleep levels)*.
+The project is currently uses the *external* oscillator over the default
+*RC* oscillator, or the internal *8MD256* oscillator.
+This is presumably the middle gorund considering both
+accuracy and power consumption.
 The compromises are not yet fully clear to me,
 *further testing and investigation is required*.
 

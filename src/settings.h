@@ -2,17 +2,30 @@
 // --- Behaviour ---
 
 /* 
-    Prefers partial refreshes over full refreshes.
+    # Concerning the two different types of displays
     On the older, FPC-A005 B/W display:
       - Full refreshes take 4x the time and power of a partial refresh.
       - Display remains clear after multiple partial refreshes.
-      - Enable the option!
+      - I recommend preferring fast refreshes, and full refreshing sparsely.
     On the newer, FPC-7519rev.b display:
       - Full refreshes take 2x the time and power of a partial refresh.
       - Display quality quickly degrades after a few partial refreshes.
-      - Disable the option!
+      - I recommend preferring full refreshes, and full refreshing often.
+*/
+
+/* 
+    Prefers partial refreshes over full refreshes.
+    This does not affect normal mode!
+    Normal mode is affected by the next option.
 */
 //#define PREFER_FAST_REFRESH
+
+/* 
+    Do a full refresh in normal mode after this many boots.
+    As in normal mode a boot occurs approximately every minute,
+    this is basically in minutes.
+*/
+#define FULL_REFRESH_EVERY 5
 
 /* 
     The following options have to be configured as to reflect

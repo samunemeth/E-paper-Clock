@@ -489,27 +489,18 @@ void setup() {
 
 finalRender:
 
-    // Print the time to the display
-    #if defined(PREFER_FAST_REFRESH)
-        #if defined(AUX_FOR_DISP)
+    // We can assume that we will do a full refresh.
+    bool fast_refresh = false;
 
-            // See if a fast refresh can be done.
-            bool do_fast_refresh = false;
-            do_fast_refresh = (mode == RESET_MODE) || (mode == SECONDS_MODE);
+    // If the display was not powered off, we have the opportunity to do a partial.
+    #if !defined(AUX_FOR_DISP)
+        fast_refresh = true;
+    #endif /* !AUX_FOR_DISP */
 
-            // If we can, do a fast refresh.
-            displayStartDraw(/*fast=*/ do_fast_refresh);
+    // Depending on the settings, we have to do a full refresh every so often.
+    if (boot_num % FULL_REFRESH_EVERY == 0) fast_refresh = false;
 
-        #else
-
-            displayStartDraw(/*fast=*/ true);
-            
-        #endif /* AUX_FOR_DISP */
-    #else
-        
-        displayStartDraw();
-
-    #endif /* PREFER_FAST_REFRESH */
+    displayStartDraw(fast_refresh);
 
     displayRenderBorders();
     displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
