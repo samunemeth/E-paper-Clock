@@ -25,14 +25,14 @@ const TickType_t loop_tick_delay = LOOP_WAIT_TIME / portTICK_PERIOD_MS;
 
 
 // --- Mode Numbering ---
-#define NULL_MODE     0
-#define RESET_MODE    1 << 0
-#define NORMAL_MODE   1 << 1
-#define RESYNC_MODE   1 << 2
-#define SECONDS_MODE  1 << 3
-#define STOPPER_MODE  1 << 4
-#define UPDATE_MODE   1 << 5
-#define CRITICAL_MODE 1 << 6
+#define NULL_MODE     0b00000000
+#define RESET_MODE    0b00000001
+#define NORMAL_MODE   0b00000010
+#define RESYNC_MODE   0b00000100
+#define SECONDS_MODE  0b00001000
+#define STOPPER_MODE  0b00010000
+#define UPDATE_MODE   0b00100000
+#define CRITICAL_MODE 0b01000000
 
 // --- Global Variables ---
 
@@ -61,6 +61,7 @@ char strf_date_buf[16];
 
 // Loop status
 bool loop_running;
+bool fast_refresh;
 
 
 // --- Function Declarations ---
@@ -129,10 +130,7 @@ void setup() {
     const uint8_t last_mode = mode;
 
     // Check if we have a valid desired mode.
-    if (desired_mode == NORMAL_MODE ||
-        desired_mode == UPDATE_MODE ||
-        desired_mode == SECONDS_MODE || 
-        desired_mode == RESET_MODE) {
+    if (desired_mode & (NORMAL_MODE + UPDATE_MODE + SECONDS_MODE + RESET_MODE)) {
 
         // Set that as our current mode.
         mode = desired_mode;
@@ -225,9 +223,7 @@ void setup() {
         }
 
         // If we need a resync, we can change the mode.
-        if (needs_resync) {
-            mode = RESYNC_MODE;
-        }
+        if (needs_resync) { mode = RESYNC_MODE; }
 
     }
 
@@ -285,22 +281,25 @@ void setup() {
     // This way the display can initialize while we read sensors.
 
 
-    // --- Using the Modes ---
+    // --- Blocking Modes ---
 
 
     // Initialize the display.
     // If we are in RESET mode, we have to wipe the screen.
-    displayInit(mode == RESET_MODE || mode == CRITICAL_MODE);
+    displayInit(mode & (CRITICAL_MODE + RESET_MODE));
 
     // If we are in critical mode, we need to display a warning message, and shut down the processor.
     if (mode == CRITICAL_MODE) {
 
-        // Draw to display
+        // A full refresh may be needed.
         #if !defined(AUX_FOR_DISP) && defined(PREFER_FAST_REFRESH)
-            displayStartDraw(/*fast=*/ true);
+            fast_refresh = true;
         #else
-            displayStartDraw();
+            fast_refresh = false;
         #endif /* !AUX_FOR_DISP && PREFER_FAST_REFRESH */
+
+        // Draw to display
+        displayStartDraw(/*fast=*/ fast_refresh);
 
         displayRenderCriticalMessage();
 
@@ -313,14 +312,10 @@ void setup() {
         // Disable wakeup sources
         esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
 
-        // Stop pin holding
-        // There is no pin holding in this version.
-        //gpio_hold_dis(AUX_PWR_PIN_NUM);
-        //gpio_deep_sleep_hold_dis();
-
         // Go into INDEFINITE deep sleep. (Basically shut down.)
-        // Nothing is run after this.
         esp_deep_sleep_start();
+
+        // Nothing is run after this.
         
     }
 
@@ -339,13 +334,16 @@ void setup() {
         // Turn the update button into a button returning to normal mode.
         attachInterrupt(digitalPinToInterrupt(OTA_SW_PIN), intNormalMode, FALLING);
 
-        // Draw to display
+        // A full refresh may be needed.
         #if !defined(AUX_FOR_DISP) && defined(PREFER_FAST_REFRESH)
-            displayStartDraw(/*fast=*/ true);
+            fast_refresh = true;
         #else
-            displayStartDraw();
+            fast_refresh = false;
         #endif /* !AUX_FOR_DISP && PREFER_FAST_REFRESH */
-
+        
+        // Draw to display
+        displayStartDraw(/*fast=*/ fast_refresh);
+        
         displayRenderUpdateMessage();
 
         displayEndDraw();
@@ -357,10 +355,12 @@ void setup() {
         // Block all other tasks.
         for (;;) vTaskDelay(loop_tick_delay);
 
+        // Nothing is run after this.
+
     }
 
-    // Display a start message
-    
+    // --- Running Modes ---
+ 
     // If we are in RESET mode, the clock may not be set yet. Instead of a time, 
     // we display a message, or just clear the display.
     if (mode == RESET_MODE) {
@@ -371,7 +371,7 @@ void setup() {
     }
 
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
-    if (mode == RESET_MODE || mode == RESYNC_MODE) {
+    if (mode & (RESYNC_MODE + RESET_MODE)) {
 
         // Configure SNTP time sync.
         sntp_setservername(1, SNTP_1);
@@ -407,27 +407,12 @@ void setup() {
     // Display seconds in the seconds mode.
     if (mode == SECONDS_MODE) {
 
-        // If we are powering the display down,
-        // a full refresh is required first.
+        // A full refresh may be required first.
         #if defined(AUX_FOR_DISP)
-
-            // Format time for display
-            getTime();
-            formatStrings();
-        
-            // Print the time to the display
-            displayStartDraw();
-
-            displayRenderBorders();
-            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
-            displayRenderTime(strf_hour_buf, strf_minute_buf);
-            displayRenderDate(strf_date_buf);
-        
-            displayEndDraw();
-
+            fast_refresh = false;
+        #else
+            fast_refresh = true;
         #endif /* AUX_FOR_DISP */
-
-
         
         // Loop and print seconds
         loop_running = true;
@@ -448,7 +433,8 @@ void setup() {
             formatStrings();
             
             // Print the time and seconds to the display
-            displayStartDraw(/*fast=*/ true);
+            displayStartDraw(/*fast=*/ fast_refresh);
+            fast_refresh = true;
             
             displayRenderBorders();
             displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
@@ -489,8 +475,7 @@ void setup() {
 
 finalRender:
 
-    // We can assume that we will do a full refresh.
-    bool fast_refresh = false;
+    // --- Normal Mode ---
 
     // If the display was not powered off, we have the opportunity to do a partial.
     // But only if we are coming from normal or reset mode.
@@ -499,9 +484,11 @@ finalRender:
         #if defined(PREFER_FAST_REFRESH)
             fast_refresh = true;
         #else
-            fast_refresh = ((mode == NORMAL_MODE) || (mode == RESYNC_MODE)) &&
-                ((last_mode == RESET_MODE) || (last_mode == NORMAL_MODE) || (last_mode == RESYNC_MODE));
+            fast_refresh = (mode & (NORMAL_MODE + RESYNC_MODE)) &&
+                (last_mode & (RESET_MODE + NORMAL_MODE + RESYNC_MODE));
         #endif /* PREFER_FAST_REFRESH */
+    #else
+        fast_refresh = false;
     #endif /* !AUX_FOR_DISP */
 
     // Depending on the settings, we have to do a full refresh every so often.

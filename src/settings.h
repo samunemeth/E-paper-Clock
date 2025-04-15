@@ -2,7 +2,7 @@
 // --- Behaviour ---
 
 /* 
-    # Concerning the two different types of displays
+    Concerning the two different types of displays
     On the older, FPC-A005 B/W display:
       - Full refreshes take 4x the time and power of a partial refresh.
       - Display remains clear after multiple partial refreshes.
@@ -11,6 +11,7 @@
       - Full refreshes take 2x the time and power of a partial refresh.
       - Display quality quickly degrades after a few partial refreshes.
       - I recommend preferring full refreshes, and full refreshing often.
+    See README.md for more info!
 */
 
 /* 
