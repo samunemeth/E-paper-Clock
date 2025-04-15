@@ -493,8 +493,15 @@ finalRender:
     bool fast_refresh = false;
 
     // If the display was not powered off, we have the opportunity to do a partial.
+    // But only if we are coming from normal or reset mode.
+    // If fast refreshed is preferred, we can do it anyway.
     #if !defined(AUX_FOR_DISP)
-        fast_refresh = true;
+        #if defined(PREFER_FAST_REFRESH)
+            fast_refresh = true;
+        #else
+            fast_refresh = ((mode == NORMAL_MODE) || (mode == RESYNC_MODE)) &&
+                ((last_mode == RESET_MODE) || (last_mode == NORMAL_MODE) || (last_mode == RESYNC_MODE));
+        #endif /* PREFER_FAST_REFRESH */
     #endif /* !AUX_FOR_DISP */
 
     // Depending on the settings, we have to do a full refresh every so often.
