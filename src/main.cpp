@@ -46,9 +46,12 @@ uint8_t RTC_NOINIT_ATTR last_sync_minute;
 uint8_t RTC_NOINIT_ATTR last_sync_hour;
 char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
 char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
+float RTC_NOINIT_ATTR time_shift_average;
+uint32_t RTC_NOINIT_ATTR time_shift_samples;
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
+uint8_t RTC_NOINIT_ATTR battery_status;
 
 // Time related variables
 time_t now;
@@ -109,6 +112,9 @@ void setup() {
         desired_mode = RESET_MODE;
         mode = NULL_MODE;
         boot_num = 0;
+
+        time_shift_average = 0;
+        time_shift_samples = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -119,6 +125,7 @@ void setup() {
             last_sync_hour;
             last_sync_minute;
             strf_battery_value_buf;
+            battery_status;
         */
 
     }
@@ -248,6 +255,17 @@ void setup() {
         // Round, and convert to a string.
         sprintf(strf_battery_value_buf, "%d%%", battery_percent);
 
+        // Set battery status based on level.
+        if (battery_percent < 25) {
+            battery_status = 0;
+        } else if (battery_percent < 50) {
+            battery_status = 1;
+        } else if (battery_percent < 75) {
+            battery_status = 2;
+        } else {
+            battery_status = 3;
+        }
+
     }
 
     // Configure the time zone, regardless of the mode. We have to do it either way.
@@ -351,9 +369,16 @@ void setup() {
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode & (RESYNC_MODE + RESET_MODE)) {
 
+        // Get the minute before the sync happens.
+        getTime();
+        const uint8_t before_sync_min = timeinfo.tm_min;
+
+        // Skip the sync for development purposes.
+        #ifndef SKIP_SYNC
+
         // Set up variable for potential interrupt.
         loop_running = true;
-
+        
         // Configure SNTP time sync.
         sntp_setoperatingmode(SNTP_SYNC_MODE_IMMED);
         sntp_setservername(1, SNTP_1);
@@ -373,11 +398,21 @@ void setup() {
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
-        } while (loop_running || (timeinfo.tm_year < 100) || (WiFi.status() != WL_CONNECTED));
+        } while (loop_running);
         loop_running = true;
-
+        
         // Turn off the Wifi
         WiFi.mode(WIFI_OFF);
+        
+        #endif /* !SKIP_SYNC */
+
+        // Get the minute after the sync.
+        const uint8_t after_sync_min = timeinfo.tm_min;
+        const uint8_t time_shift = abs(after_sync_min - before_sync_min);
+
+        // Calculate new average time shift.
+        time_shift_average = (time_shift + (time_shift_average * time_shift_samples)) / (time_shift_samples + 1);
+        time_shift_samples++;
 
         // Set the last sync times
         last_sync_hour = timeinfo.tm_hour;
@@ -422,7 +457,7 @@ void setup() {
             fast_refresh = true;
             
             displayRenderBorders();
-            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+            displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf, battery_status);
             displayRenderTime(strf_hour_buf, strf_minute_buf);
             displayRenderDate(strf_date_buf);
             displayRenderSecond(timeinfo.tm_sec);
@@ -487,7 +522,7 @@ finalRender:
     displayStartDraw(fast_refresh);
 
     displayRenderBorders();
-    displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf);
+    displayRenderStatusBar(strf_battery_value_buf, strf_last_sync_hour_buf, strf_last_sync_minute_buf, battery_status);
     displayRenderTime(strf_hour_buf, strf_minute_buf);
     displayRenderDate(strf_date_buf);
 

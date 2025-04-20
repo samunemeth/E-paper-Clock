@@ -51,6 +51,7 @@
     this is basically in minutes.
 */
 #define RESYNC_EVERY 240
+//#define SKIP_SYNC
 
 
 // --- General Settings ---

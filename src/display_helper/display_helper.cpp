@@ -62,11 +62,14 @@ void displayRenderBorders() {
 /// @param battery_value_buf Battery voltage in string format.
 /// @param last_sync_hour_buf Last sync hours in string format.
 /// @param last_sync_minute_buf Last sync minutes in string format.
-void displayRenderStatusBar(char* battery_value_buf, char* last_sync_hour_buf, char* last_sync_minute_buf) {
+void displayRenderStatusBar(char* battery_value_buf, char* last_sync_hour_buf, char* last_sync_minute_buf, uint8_t battery_status) {
 
     display.setFont(&FreeMonoBold9pt7b);
-    displayCenterText(battery_value_buf, 32, 6);
 
+    display.drawXBitmap(0, 1, battery_multiple_xbm_bits[battery_status], battery_xbm_width, battery_xbm_height, GxEPD_BLACK);
+    displayCenterText(battery_value_buf, 40, 6);
+
+    display.drawXBitmap(236, 0, refresh_xbm_bits, refresh_xbm_width, refresh_xbm_height, GxEPD_BLACK);
     displayCenterText(last_sync_hour_buf, 260, 6);
     displayCenterText((char*)":", 273, 6);
     displayCenterText(last_sync_minute_buf, 286, 6);
