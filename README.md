@@ -73,9 +73,6 @@ If you just want to look at the schematic, you can use the pdf.
 **Implement**
   - Add charging detection.
   - Add stopper mode.
-  - Mitigate accidental skipping of resync.
-  - Use `struct` for modes.
-  - Add icons for status bar.
   - Show wifi strength at last sync.
   - Multiple WiFi connections.
     *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
@@ -93,6 +90,7 @@ If you just want to look at the schematic, you can use the pdf.
   - Test power consumption with different configurations.
   - Ways to connect to WiFi faster, like storing the channel number, or setting
   up a persistent wifi connection.
+  - ***GPIO4 can and will fuck with you!***
 
 **Document**
   - Document the font creation process.
