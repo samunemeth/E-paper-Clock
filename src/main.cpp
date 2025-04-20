@@ -398,13 +398,16 @@ void setup() {
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
-        } while (loop_running);
+        } while (loop_running || (timeinfo.tm_year < 100));
         loop_running = true;
         
         // Turn off the Wifi
         WiFi.mode(WIFI_OFF);
         
         #endif /* !SKIP_SYNC */
+
+        // Wait a bit to allow the clock to actually sync.
+        vTaskDelay(loop_tick_delay);
 
         // Get the minute after the sync.
         const uint8_t after_sync_min = timeinfo.tm_min;
