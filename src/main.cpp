@@ -72,6 +72,7 @@ void IRAM_ATTR intUpdateMode();
 void IRAM_ATTR intSecondsMode();
 void IRAM_ATTR intNormalMode();
 void IRAM_ATTR intLoopStop();
+void IRAM_ATTR sntpSyncCallback(timeval *tv);
 
 // Time related functions.
 void getTime();
@@ -120,10 +121,6 @@ void setup() {
             strf_battery_value_buf;
         */
 
-    } else {
-
-        boot_num++;
-
     }
 
     // Rotate mode variable to last mode.
@@ -166,12 +163,15 @@ void setup() {
             // If the last mode was the same, do not enter update mode again, as this was a button press to exit.
             // Update mode has a higher priority, we will check that first.
 
-            if      ( (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE) ) { mode = UPDATE_MODE; }
-            else if ( digitalRead(BTN_TOP_PIN) == LOW )                                { mode = SECONDS_MODE;   }
+            if      ( (digitalRead(OTA_SW_PIN) == LOW) && (last_mode != UPDATE_MODE) ) { mode = UPDATE_MODE;  }
+            else if ( digitalRead(BTN_TOP_PIN) == LOW )                                { mode = SECONDS_MODE; }
 
         }
 
     }
+
+    // If we are in normal mode, we may need to do a resync.
+    if ((mode == NORMAL_MODE) && (boot_num % RESYNC_EVERY == 0)) { mode = RESYNC_MODE; }
 
     // If we are not in any mode yet, just say we were in a reset.
     // This should not be strictly necessary, but it's a good catch all.
@@ -198,33 +198,6 @@ void setup() {
     // If we are in normal mode, we can attach the interrupt to the top button.
     if (mode == NORMAL_MODE) {
         attachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN), intSecondsMode, FALLING);
-    }
-
-    // Configure the time zone, regardless of the mode. We have to do it either way.
-    configureTimeZone();
-
-    // If we are in normal mode, we may need to do a resync.
-    if (mode == NORMAL_MODE) {
-
-        // Get the time for the check.
-        getTime();
-
-        // Initialize variable.
-        bool needs_resync = false;
-
-        // Do a resync every time if we are in demo mode.
-        #if defined(RESYNC_DEMO)
-        needs_resync = true;
-        #endif
-
-        // Check for all the times.
-        for (uint8_t i = 0; i < sizeof(resync_at) / sizeof(resync_at[0]); i++) {
-            needs_resync = needs_resync || (timeinfo.tm_hour == resync_at[i]) && (timeinfo.tm_min == 0);
-        }
-
-        // If we need a resync, we can change the mode.
-        if (needs_resync) { mode = RESYNC_MODE; }
-
     }
 
     // Measure battery voltage if needed.
@@ -276,6 +249,9 @@ void setup() {
         sprintf(strf_battery_value_buf, "%d%%", battery_percent);
 
     }
+
+    // Configure the time zone, regardless of the mode. We have to do it either way.
+    configureTimeZone();
 
     // The order of operations is intentional.
     // This way the display can initialize while we read sensors.
@@ -359,7 +335,9 @@ void setup() {
 
     }
 
+
     // --- Running Modes ---
+
  
     // If we are in RESET mode, the clock may not be set yet. Instead of a time, 
     // we display a message, or just clear the display.
@@ -373,12 +351,18 @@ void setup() {
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode & (RESYNC_MODE + RESET_MODE)) {
 
+        // Set up variable for potential interrupt.
+        loop_running = true;
+
         // Configure SNTP time sync.
+        sntp_setoperatingmode(SNTP_SYNC_MODE_IMMED);
         sntp_setservername(1, SNTP_1);
         sntp_setservername(2, SNTP_2);
+        sntp_set_time_sync_notification_cb(sntpSyncCallback);
         sntp_init();
         
         // Set up WiFi
+        WiFi.persistent(false);
         WiFi.mode(WIFI_STA);
         WiFi.begin(ssid, password);
 
@@ -389,7 +373,8 @@ void setup() {
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
-        } while ((timeinfo.tm_year + 1900 < 2000) || (WiFi.status() != WL_CONNECTED));
+        } while (loop_running || (timeinfo.tm_year < 100) || (WiFi.status() != WL_CONNECTED));
+        loop_running = true;
 
         // Turn off the Wifi
         WiFi.mode(WIFI_OFF);
@@ -454,9 +439,12 @@ void setup() {
             if (!loop_running) break;
 
         }
-
+        
         // Detach the interrupt and attach the original one.
         detachInterrupt(digitalPinToInterrupt(BTN_TOP_PIN));
+
+        // Reset the variable.
+        loop_running = true;
 
         // Clear the seconds with the final render
         goto finalRender;
@@ -475,8 +463,10 @@ void setup() {
 
 finalRender:
 
+
     // --- Normal Mode ---
 
+    
     // If the display was not powered off, we have the opportunity to do a partial.
     // But only if we are coming from normal or reset mode.
     // If fast refreshed is preferred, we can do it anyway.
@@ -508,6 +498,9 @@ finalRender:
     
     // Power down all peripherals.
     digitalWrite(AUX_PWR_PIN, LOW);
+
+    // Increment boot counter
+    boot_num++;
         
     // As the display refresh takes time, we have to get the time again.
     getTime();
@@ -566,6 +559,12 @@ void IRAM_ATTR intNormalMode() {
 
 /// @brief Stops the current loop that the interrupt occurred in.
 void IRAM_ATTR intLoopStop() {
+
+    loop_running = false;
+
+}
+
+void IRAM_ATTR sntpSyncCallback(timeval *tv) {
 
     loop_running = false;
 

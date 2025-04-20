@@ -43,14 +43,14 @@
     As in normal mode a boot occurs approximately every minute,
     this is basically in minutes.
 */
-#define BATT_SENSE_EVERY 10
+#define BATT_SENSE_EVERY 30
 
-
-/*
-    Activates a demo mode, with resyncs every minute.
-    Useful for checking problems with resync mode.
+/* 
+    Resync after this many boots.
+    As in normal mode a boot occurs approximately every minute,
+    this is basically in minutes.
 */
-//#define RESYNC_DEMO
+#define RESYNC_EVERY 240
 
 
 // --- General Settings ---
@@ -62,14 +62,12 @@
 #define TIMEZONE                "CET-1CEST,M3.5.0,M10.5.0/3"   // Time zone for the clock. Here I'm using Budapest time.
 
 #define ADC_FACTOR              2                              // The factor to multiply the measured voltage with. Depends on the voltage divider.
-#define ADC_OVER_SAMPLE_COUNT   8                              // How many times to sample and average the 
+#define ADC_OVER_SAMPLE_COUNT   16                             // How many times to sample and average the 
 
 #define FULL_BATTERY_TOLERANCE  50                             // How much off can the battery voltage be from full, to be still considered as full.
 #define CRITICAL_BATTERY_LEVEL  3500                           // Below this battery voltage, critical mode will be activated.
 
-uint8_t resync_at[3] =          {5, 11, 17};                   // Resync the clock at there hours. (24h format)
-
 #define OMIT_SLEEP              1                              // If there are less than this many seconds to the minute, we wait instead of going to sleep.
-#define SLEEP_MARGIN            150                            // The processor wakes this many milliseconds up before the designated update time.
+#define SLEEP_MARGIN            100                            // The processor wakes this many milliseconds up before the designated update time.
 
-#define MAX_DISPLAYED_SECONDS   20                             // The maximum number of seconds to count out in USER mode.
+#define MAX_DISPLAYED_SECONDS   10                             // The maximum number of seconds to count out in USER mode.
