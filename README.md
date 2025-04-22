@@ -237,6 +237,8 @@ The compromises are not yet fully clear to me,
     [Espressif Documentation](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32c3/api-guides/performance/speed.html)
   - Display driver:
     [Data Sheet](https://mikroshop.ch/pdf/EPaper29.pdf)
+  - Online XBM editor:
+    [Webpage](https://xbm.jazzychad.net)
 
 ## Ports, Future Updates
 
