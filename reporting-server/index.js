@@ -8,7 +8,10 @@ const path = require('path');
 app.use(express.json());
 
 // Serve the static main page.
-app.use('/', express.static(path.join(__dirname, 'public')))
+app.use('/', express.static(path.join(__dirname, 'public')));
+
+// Server the collected data.
+app.use('/data', express.static(path.join(__dirname, 'data')));
 
 // Get the data from the reports.
 app.post('/report', async (req, res) => {
