@@ -16,7 +16,7 @@ app.post('/report', async (req, res) => {
     console.log(`Received the following data: ${JSON.stringify(data)}`);
     const timestamp = (new Date()).toISOString();
     try { await fs.mkdir('./data'); } catch (error) { };
-    await fs.appendFile(`./data/${data.uuid}.txt`, `${timestamp}; ${data.batteryLevel}\n`, 'utf8');
+    await fs.appendFile(`./data/${data.uuid}.csv`, `${timestamp}; ${data.batteryLevel}\n`, 'utf8');
     res.sendStatus(200);
 });
 
