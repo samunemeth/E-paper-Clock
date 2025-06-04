@@ -2,4 +2,5 @@
 .vscode
 .git.old
 wifi_secret.h
-node_modules
+node_modules/
+package-lock.json
