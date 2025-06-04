@@ -1,4 +1,5 @@
 const express = require('express');
+var serveIndex = require('serve-index');
 const fs = require('fs/promises');
 const app = express();
 const port = 12891;
@@ -12,6 +13,8 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 
 // Server the collected data.
 app.use('/data', express.static(path.join(__dirname, 'data')));
+app.use('/data', serveIndex(path.join(__dirname, 'data')));
+
 
 // Get the data from the reports.
 app.post('/report', async (req, res) => {
