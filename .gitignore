@@ -2,3 +2,4 @@
 .vscode
 .git.old
 wifi_secret.h
+node_modules

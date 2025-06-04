@@ -5,6 +5,7 @@
 // --- Libraries ---
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 
 #include <esp_sntp.h>
 #include <esp_adc_cal.h>
@@ -394,12 +395,23 @@ void setup() {
         // Configure the time zone again, as the settings get lost here.
         configureTimeZone();
 
+        // Format telemetry data to send.
+        char strf_post_buf[120];
+        sprintf(strf_post_buf, "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\"}", uuid, strf_battery_value_buf);
+
         // Wait for WiFi to connect, and time to sync.
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
         } while (loop_running || (timeinfo.tm_year < 100));
         loop_running = true;
+
+        // Make an HTTP POST request for data logging.
+        HTTPClient http;
+        http.begin(reportingUrl);
+        http.addHeader("Content-Type", "application/json");
+        int httpRes = http.POST(strf_post_buf);
+        http.end();
         
         // Turn off the Wifi
         WiFi.mode(WIFI_OFF);
