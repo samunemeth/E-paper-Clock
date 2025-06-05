@@ -93,6 +93,7 @@ If you just want to look at the schematic, you can use the pdf.
   - ***GPIO4 can and will fuck with you!***
 
 **Document**
+  - Document the telemetry collection server.
   - Document the font creation process.
   - Document assembly and schematics.
   - Document 3D printed parts.
