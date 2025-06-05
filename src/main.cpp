@@ -47,8 +47,8 @@ uint8_t RTC_NOINIT_ATTR last_sync_minute;
 uint8_t RTC_NOINIT_ATTR last_sync_hour;
 char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
 char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
-float RTC_NOINIT_ATTR time_shift_average;
-uint32_t RTC_NOINIT_ATTR time_shift_samples;
+//float RTC_NOINIT_ATTR time_shift_average;
+//uint32_t RTC_NOINIT_ATTR time_shift_samples;
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
@@ -114,8 +114,8 @@ void setup() {
         mode = NULL_MODE;
         boot_num = 0;
 
-        time_shift_average = 0;
-        time_shift_samples = 0;
+        //time_shift_average = 0;
+        //time_shift_samples = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -371,11 +371,11 @@ void setup() {
     if (mode & (RESYNC_MODE + RESET_MODE)) {
 
         // Get the minute before the sync happens.
-        getTime();
-        const uint8_t before_sync_min = timeinfo.tm_min;
+        //getTime();
+        //const uint8_t before_sync_min = timeinfo.tm_min;
 
         // Skip the sync for development purposes.
-        #ifndef SKIP_SYNC
+        #if !defined(SKIP_SYNC)
 
         // Set up variable for potential interrupt.
         loop_running = true;
@@ -396,8 +396,26 @@ void setup() {
         configureTimeZone();
 
         // Format telemetry data to send.
-        char strf_post_buf[120];
-        sprintf(strf_post_buf, "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\"}", uuid, strf_battery_value_buf);
+        #if defined(REPORT_TELEMETRY)
+
+            /* 
+                The buffer neds to be big enough to fit all the data.
+                The size of the different data parts:
+                    - Outline:      ~60
+                    - UUID:          36
+                    - BatteryLevel:  3-4
+                    - BootNum:       1-10
+                    - currentMode:   1-3
+                Total:              ~102-113
+            */
+           char strf_post_buf[120];
+
+           // Fill the buffer with the formatted string.
+           sprintf(strf_post_buf,
+                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\"}",
+                uuid, strf_battery_value_buf, boot_num, mode);
+            
+        #endif
 
         // Wait for WiFi to connect, and time to sync.
         do {
@@ -407,11 +425,20 @@ void setup() {
         loop_running = true;
 
         // Make an HTTP POST request for data logging.
-        HTTPClient http;
-        http.begin(reportingUrl);
-        http.addHeader("Content-Type", "application/json");
-        int httpRes = http.POST(strf_post_buf);
-        http.end();
+        #if defined(REPORT_TELEMETRY)
+
+            // Create an http client.
+            HTTPClient http;
+
+            // Configure url and data to send.
+            http.begin(reportingUrl);
+            http.addHeader("Content-Type", "application/json");
+            int httpRes = http.POST(strf_post_buf);
+
+            // Close the connection.
+            http.end();
+
+        #endif
         
         // Turn off the Wifi
         WiFi.mode(WIFI_OFF);
@@ -422,12 +449,12 @@ void setup() {
         vTaskDelay(loop_tick_delay);
 
         // Get the minute after the sync.
-        const uint8_t after_sync_min = timeinfo.tm_min;
-        const uint8_t time_shift = abs(after_sync_min - before_sync_min);
+        //const uint8_t after_sync_min = timeinfo.tm_min;
+        //const uint8_t time_shift = abs(after_sync_min - before_sync_min);
 
         // Calculate new average time shift.
-        time_shift_average = (time_shift + (time_shift_average * time_shift_samples)) / (time_shift_samples + 1);
-        time_shift_samples++;
+        //time_shift_average = (time_shift + (time_shift_average * time_shift_samples)) / (time_shift_samples + 1);
+        //time_shift_samples++;
 
         // Set the last sync times
         last_sync_hour = timeinfo.tm_hour;

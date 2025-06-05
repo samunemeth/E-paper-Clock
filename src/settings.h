@@ -53,6 +53,12 @@
 #define RESYNC_EVERY 240
 //#define SKIP_SYNC
 
+/* 
+    Report telemetry data to a web server on resync.
+    The url to report to can be configured in `wifi_secrets.h`
+    This may consume a bit more power, but is really usefull for data logging.
+*/
+#define REPORT_TELEMETRY
 
 // --- General Settings ---
 
