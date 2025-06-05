@@ -8,8 +8,9 @@
 </head>
 
 <body>
-    This is a reporting server.
-    <button onclick="testRequest()">This button sends a test request.</button>
+    This is a reporting server. <br>
+    <button onclick="testRequest()">This button sends a test request.</button> <br>
+    <a href="/data">Collected Data</a> <br>
 
     <script>
         function testRequest() {
@@ -17,7 +18,9 @@
                 method: "POST",
                 body: JSON.stringify({
                     uuid: "c1fc0c94-76f9-4de2-a9eb-388b2a2b5f0d", // This is the example UUID.
-                    batteryLevel: "69%"
+                    batteryLevel: "69%",
+                    currentMode: "1",
+                    bootNum: "73"
                 }),
                 headers: {
                     "Content-type": "application/json; charset=UTF-8"

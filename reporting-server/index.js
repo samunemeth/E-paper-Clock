@@ -4,14 +4,16 @@ import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from 'url';
 
-const app = express();
+// Settings.
 const port = 12891;
+const dataFileExtension = "log";
 
 // Get absolute paths.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use json formatting to get reported data.
+// Express setup.
+const app = express();
 app.use(express.json());
 
 // Serve the static main page.
@@ -28,13 +30,28 @@ app.use("/data", (req, res, next) => {
     next();
 });
 
-
 // Get the data from the reports.
 app.post("/report", async (req, res) => {
+
+    // Parse incoming data.
     const data = req.body;
     console.log(`Received the following data: ${JSON.stringify(data)}`);
+
+    // Format needed data.
     const timestamp = (new Date()).toISOString();
-    await fs.appendFile(`./data/${data.uuid}.log`, `${timestamp}; ${data.batteryLevel}\n`, "utf8");
+    const targetFilePath = path.join(__dirname, `./data/${data.uuid}.${dataFileExtension}`);
+
+    // Create file if not yet present.
+    try {
+        await fs.access(targetFilePath);
+    } catch {
+        await fs.writeFile(targetFilePath, "timestamp; batteryLevel; bootNum; currentMode\n", "utf8");
+    }
+
+    // Append data to file.
+    await fs.appendFile(targetFilePath, `${timestamp}; ${data.batteryLevel}; ${data.bootNum}; ${data.currentMode}\n`, "utf8");
+
+    // Send and OK response.
     res.sendStatus(200);
 });
 
