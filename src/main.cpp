@@ -47,8 +47,8 @@ uint8_t RTC_NOINIT_ATTR last_sync_minute;
 uint8_t RTC_NOINIT_ATTR last_sync_hour;
 char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
 char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
-//float RTC_NOINIT_ATTR time_shift_average;
-//uint32_t RTC_NOINIT_ATTR time_shift_samples;
+int64_t RTC_NOINIT_ATTR time_shift_average;
+uint32_t RTC_NOINIT_ATTR time_shift_samples;
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
@@ -114,8 +114,8 @@ void setup() {
         mode = NULL_MODE;
         boot_num = 0;
 
-        //time_shift_average = 0;
-        //time_shift_samples = 0;
+        time_shift_average = 0;
+        time_shift_samples = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -369,13 +369,17 @@ void setup() {
 
     // In RESET and RESYNC mode, we need to connect to a wifi network, and sync with and SNTP server.
     if (mode & (RESYNC_MODE + RESET_MODE)) {
-
-        // Get the minute before the sync happens.
-        //getTime();
-        //const uint8_t before_sync_min = timeinfo.tm_min;
-
+        
         // Skip the sync for development purposes.
         #if !defined(SKIP_SYNC)
+
+        // Get precise time.
+        struct timeval tv_now;
+        gettimeofday(&tv_now, NULL);
+        int64_t time_before_ms = (int64_t)tv_now.tv_sec * 1000L + ((int64_t)tv_now.tv_usec / 1000L);
+
+        // Try to make and educated guess of the sync time.
+        int64_t time_waiting_ms = 0;
 
         // Set up variable for potential interrupt.
         loop_running = true;
@@ -394,38 +398,53 @@ void setup() {
 
         // Configure the time zone again, as the settings get lost here.
         configureTimeZone();
+        
+        // Wait for WiFi to connect, and time to sync.
+        do {
+            getTime();
+            vTaskDelay(loop_tick_delay);
+            time_waiting_ms += loop_tick_delay;
+        } while (loop_running || (timeinfo.tm_year < 100));
+        loop_running = true;
+        
+        // Wait a bit to allow the clock to actually sync.
+        vTaskDelay(loop_tick_delay);
+        time_waiting_ms += loop_tick_delay;
+        
+        // Get precise time.
+        struct timeval tv_now;
+        gettimeofday(&tv_now, NULL);
+        int64_t time_after_ms = (int64_t)tv_now.tv_sec * 1000L + ((int64_t)tv_now.tv_usec / 1000L);
+        
+        // Calculate the resulting time difference from the sync.
+        int64_t time_shift_ms = time_after_ms - (time_before_ms + time_waiting_ms);
+        
+        // Calculate new average time shift.
+        time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + 1);
+        time_shift_samples++;
 
-        // Format telemetry data to send.
+        // Make an HTTP POST request for data logging.
         #if defined(REPORT_TELEMETRY)
 
             /* 
                 The buffer neds to be big enough to fit all the data.
                 The size of the different data parts:
-                    - Outline:      ~60
-                    - UUID:          36
-                    - BatteryLevel:  3-4
-                    - BootNum:       1-10
-                    - currentMode:   1-3
-                Total:              ~102-113
+                    - Outline:         ~120
+                    - UUID:             36
+                    - BatteryLevel:     4
+                    - BootNum:          10
+                    - currentMode:      3
+                    - timeShift:        20
+                    - timeShiftAverage: 20
+                    - timeShiftSamples: 10
+                Total:                  223
             */
-           char strf_post_buf[120];
+           char strf_post_buf[230];
 
            // Fill the buffer with the formatted string.
-           sprintf(strf_post_buf,
-                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\"}",
-                uuid, strf_battery_value_buf, boot_num, mode);
-            
-        #endif
-
-        // Wait for WiFi to connect, and time to sync.
-        do {
-            getTime();
-            vTaskDelay(loop_tick_delay);
-        } while (loop_running || (timeinfo.tm_year < 100));
-        loop_running = true;
-
-        // Make an HTTP POST request for data logging.
-        #if defined(REPORT_TELEMETRY)
+            sprintf(strf_post_buf,
+                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\",\"timeShift\":\"%d\",\"timeShiftAverage\":\"%d\",\"timeShiftSamples\":\"%d\"}",
+                uuid, strf_battery_value_buf, boot_num, mode, time_shift_ms, time_shift_average, time_shift_samples);
 
             // Create an http client.
             HTTPClient http;
@@ -444,17 +463,6 @@ void setup() {
         WiFi.mode(WIFI_OFF);
         
         #endif /* !SKIP_SYNC */
-
-        // Wait a bit to allow the clock to actually sync.
-        vTaskDelay(loop_tick_delay);
-
-        // Get the minute after the sync.
-        //const uint8_t after_sync_min = timeinfo.tm_min;
-        //const uint8_t time_shift = abs(after_sync_min - before_sync_min);
-
-        // Calculate new average time shift.
-        //time_shift_average = (time_shift + (time_shift_average * time_shift_samples)) / (time_shift_samples + 1);
-        //time_shift_samples++;
 
         // Set the last sync times
         last_sync_hour = timeinfo.tm_hour;

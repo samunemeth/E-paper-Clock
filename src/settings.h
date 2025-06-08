@@ -71,7 +71,7 @@
 #define ADC_FACTOR              2                              // The factor to multiply the measured voltage with. Depends on the voltage divider.
 #define ADC_OVER_SAMPLE_COUNT   16                             // How many times to sample and average the 
 
-#define FULL_BATTERY_TOLERANCE  50                             // How much off can the battery voltage be from full, to be still considered as full.
+#define FULL_BATTERY_TOLERANCE  0                              // How much off can the battery voltage be from full, to be still considered as full.
 #define CRITICAL_BATTERY_LEVEL  3500                           // Below this battery voltage, critical mode will be activated.
 
 #define OMIT_SLEEP              1                              // If there are less than this many seconds to the minute, we wait instead of going to sleep.
