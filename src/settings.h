@@ -50,7 +50,7 @@
     As in normal mode a boot occurs approximately every minute,
     this is basically in minutes.
 */
-#define RESYNC_EVERY 240
+#define RESYNC_EVERY 1
 //#define SKIP_SYNC
 
 /* 

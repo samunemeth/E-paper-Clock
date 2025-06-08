@@ -45,11 +45,11 @@ app.post("/report", async (req, res) => {
     try {
         await fs.access(targetFilePath);
     } catch {
-        await fs.writeFile(targetFilePath, "timestamp; batteryLevel; bootNum; currentMode; timeShift; timeShiftAverage; timeShiftSamples\n", "utf8");
+        await fs.writeFile(targetFilePath, "timestamp; batteryLevel; bootNum; currentMode; timeShift; timeShiftAverage; timeShiftSamples, syncDuration, wifiStrength\n", "utf8");
     }
 
     // Append data to file.
-    await fs.appendFile(targetFilePath, `${timestamp}; ${data.batteryLevel}; ${data.bootNum}; ${data.currentMode}; ${data.timeShift}; ${data.timeShiftAverage}; ${data.timeShiftSamples}\n`, "utf8");
+    await fs.appendFile(targetFilePath, `${timestamp}; ${data.batteryLevel}; ${data.bootNum}; ${data.currentMode}; ${data.timeShift}; ${data.timeShiftAverage}; ${data.timeShiftSamples}, ${data.syncDuration}, ${data.wifiStrength}\n`, "utf8");
 
     // Send and OK response.
     res.sendStatus(200);
