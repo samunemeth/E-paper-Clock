@@ -424,6 +424,11 @@ void setup() {
            time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + (int32_t)1);
            time_shift_samples++;
 
+        } else {
+
+            // After a reset, time shift does not make sense.
+            time_shift_ms = 0;
+
         }
 
         // Make an HTTP POST request for data logging.
