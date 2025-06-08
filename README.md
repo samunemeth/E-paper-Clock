@@ -78,6 +78,7 @@ If you just want to look at the schematic, you can use the pdf.
     *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
   - Skip resync if the wifi times out.
   - Better fonts, for example *Roboto*.
+  - Switch to using precise time.
 
 **Ideas**
   - Add hibernation for night? *(Basically just a longer deep sleep at night.)*
@@ -85,7 +86,7 @@ If you just want to look at the schematic, you can use the pdf.
 
 **Test**
   - Check SNTP time documentation, if it only gets time once.
-  - Test the three different internall, and external oscillators.
+  - Test the three different internal, and external oscillators.
     *[More Info](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/system/system_time.html)*
   - Test power consumption with different configurations.
   - Ways to connect to WiFi faster, like storing the channel number, or setting
