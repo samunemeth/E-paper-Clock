@@ -444,8 +444,16 @@ void setup() {
             time_shift_samples++;
 
             // Calculate the new time deviation.
-            time_deviation_average = (abs(time_deviation_ms) + (time_deviation_average * time_deviation_samples)) / (time_deviation_samples + (int32_t)1);
-            time_deviation_samples++;
+            if (time_shift_samples > 1) {
+
+                time_deviation_average = (abs(time_deviation_ms) + (time_deviation_average * time_deviation_samples)) / (time_deviation_samples + (int32_t)1);
+                time_deviation_samples++;
+
+            } else {
+
+                time_deviation_ms = 0;
+
+            }
 
             // Calculate the new time correction step size.
             time_correction_step = time_shift_average / (int32_t)RESYNC_EVERY;
