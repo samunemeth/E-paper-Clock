@@ -47,12 +47,18 @@ uint8_t RTC_NOINIT_ATTR last_sync_minute;
 uint8_t RTC_NOINIT_ATTR last_sync_hour;
 char RTC_NOINIT_ATTR strf_last_sync_hour_buf[3];
 char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
+
+// Time shift compensation variables in RTC memory
 int32_t RTC_NOINIT_ATTR time_shift_average;
 int32_t RTC_NOINIT_ATTR time_shift_samples;
+int32_t RTC_NOINIT_ATTR time_correction_step;
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
 uint8_t RTC_NOINIT_ATTR battery_status;
+
+// Wifi strength in RTC memory
+int8_t RTC_NOINIT_ATTR wifi_strength;
 
 // Time related variables
 time_t now;
@@ -83,6 +89,7 @@ void IRAM_ATTR sntpSyncCallback(timeval *tv);
 void getTime();
 void formatStrings();
 void configureTimeZone();
+void adjustTime(int32_t offset);
 
 
 // --- Code ---
@@ -116,6 +123,7 @@ void setup() {
 
         time_shift_average = 0;
         time_shift_samples = 0;
+        time_correction_step = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -127,6 +135,7 @@ void setup() {
             last_sync_minute;
             strf_battery_value_buf;
             battery_status;
+            wifi_strength;
         */
 
     }
@@ -189,6 +198,9 @@ void setup() {
 
     // --- Powering Up, Initializing, Detecting Mode Modes ---
 
+
+    // Adjust the time with the correction value.
+    adjustTime(time_correction_step);
 
     // Setting up the AUX pin for a possible use.
     pinMode(AUX_PWR_PIN, OUTPUT);
@@ -415,14 +427,18 @@ void setup() {
         int64_t time_after_ms = (int64_t)tv_now.tv_sec * (int64_t)1000 + ((int64_t)tv_now.tv_usec / (int64_t)1000);
         
         // Calculate the resulting time difference from the sync.
-        int32_t time_shift_ms = (int32_t)(time_after_ms - (time_before_ms + time_waiting_ms));
+        int32_t time_deviation_ms = (int32_t)(time_after_ms - (time_before_ms + time_waiting_ms));
+        int32_t time_shift_ms = (int32_t)(time_after_ms - (time_before_ms + time_waiting_ms - time_shift_average));
 
         // Skip average calculation after reset, as the shift here can be chaotic.
         if (mode != RESET_MODE) {
 
-           // Calculate new average time shift.
-           time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + (int32_t)1);
-           time_shift_samples++;
+            // Calculate new average time shift.
+            time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + (int32_t)1);
+            time_shift_samples++;
+
+            // Calculate the new time correction step size.
+            time_correction_step = time_shift_average / (int32_t)RESYNC_EVERY;
 
         } else {
 
@@ -431,13 +447,16 @@ void setup() {
 
         }
 
+        // Get wifi network strength.
+        wifi_strength = WiFi.RSSI();
+
         // Make an HTTP POST request for data logging.
         #if defined(REPORT_TELEMETRY)
 
             /* 
                 The buffer neds to be big enough to fit all the data.
                 The size of the different data parts:
-                    - Outline:          173
+                    - Outline:          194
                     - UUID:             36
                     - BatteryLevel:     4
                     - BootNum:          10
@@ -447,17 +466,15 @@ void setup() {
                     - timeShiftSamples: 10
                     - syncDuration:     10
                     - wifiStrength:     4
-                Total:                  270
+                    - timeDeviation:    10
+                Total:                  301
             */
-            char strf_post_buf[280];
-
-            // Get wifi network strength.
-            int8_t wifi_strength = WiFi.RSSI();
+            char strf_post_buf[310];
 
             // Fill the buffer with the formatted string.
             sprintf(strf_post_buf,
-                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\",\"timeShift\":\"%d\",\"timeShiftAverage\":\"%d\",\"timeShiftSamples\":\"%d\",\"syncDuration\":\"%d\",\"wifiStrength\":\"%d\"}",
-                uuid, strf_battery_value_buf, boot_num, mode, time_shift_ms, time_shift_average, time_shift_samples, (int32_t)time_waiting_ms, wifi_strength);
+                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\",\"timeShift\":\"%d\",\"timeShiftAverage\":\"%d\",\"timeShiftSamples\":\"%d\",\"syncDuration\":\"%d\",\"wifiStrength\":\"%d\",\"timeDeviation\":\"%d\"}",
+                uuid, strf_battery_value_buf, boot_num, mode, time_shift_ms, time_shift_average, time_shift_samples, (int32_t)time_waiting_ms, wifi_strength, time_deviation_ms);
 
             // Create an http client.
             HTTPClient http;
@@ -686,6 +703,25 @@ void configureTimeZone() {
     setenv("TZ", TIMEZONE, 1);
     tzset();
     localtime_r(&now, &timeinfo);
+
+}
+
+void adjustTime(int32_t offset) {
+
+    gettimeofday(&tv_now, NULL);
+  
+    int32_t total_usec = tv_now.tv_usec + (offset * 1000);
+    if (total_usec >= 1000000) {
+        tv_now.tv_sec += total_usec / 1000000;
+        tv_now.tv_usec = total_usec % 1000000;
+    } else if (total_usec < 0) {
+        tv_now.tv_sec += (total_usec / 1000000) - 1;
+        tv_now.tv_usec = 1000000 + (total_usec % 1000000);
+    } else {
+        tv_now.tv_usec = total_usec;
+    }
+  
+    settimeofday(&tv_now, NULL);
 
 }
 
