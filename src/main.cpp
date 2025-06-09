@@ -51,7 +51,11 @@ char RTC_NOINIT_ATTR strf_last_sync_minute_buf[3];
 // Time shift compensation variables in RTC memory
 int32_t RTC_NOINIT_ATTR time_shift_average;
 int32_t RTC_NOINIT_ATTR time_shift_samples;
+
 int32_t RTC_NOINIT_ATTR time_correction_step;
+
+int32_t RTC_NOINIT_ATTR time_deviation_average;
+int32_t RTC_NOINIT_ATTR time_deviation_samples;
 
 // Battery variable in RTC memory
 char RTC_NOINIT_ATTR strf_battery_value_buf[8];
@@ -124,6 +128,8 @@ void setup() {
         time_shift_average = 0;
         time_shift_samples = 0;
         time_correction_step = 0;
+        time_deviation_average = 0;
+        time_deviation_samples = 0;
         
         /*
             As there will be a resync after a hard reset, there is no need to
@@ -427,8 +433,8 @@ void setup() {
         int64_t time_after_ms = (int64_t)tv_now.tv_sec * (int64_t)1000 + ((int64_t)tv_now.tv_usec / (int64_t)1000);
         
         // Calculate the resulting time difference from the sync.
-        int32_t time_deviation_ms = (int32_t)(time_after_ms - (time_before_ms + time_waiting_ms));
-        int32_t time_shift_ms = (int32_t)(time_after_ms - (time_before_ms + time_waiting_ms - time_shift_average));
+        int32_t time_deviation_ms = (int32_t)(time_after_ms - time_before_ms - time_waiting_ms);
+        int32_t time_shift_ms = time_deviation_ms + time_shift_average;
 
         // Skip average calculation after reset, as the shift here can be chaotic.
         if (mode != RESET_MODE) {
@@ -437,6 +443,10 @@ void setup() {
             time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + (int32_t)1);
             time_shift_samples++;
 
+            // Calculate the new time deviation.
+            time_deviation_average = (abs(time_deviation_ms) + (time_deviation_average * time_deviation_samples)) / (time_deviation_samples + (int32_t)1);
+            time_deviation_samples++;
+
             // Calculate the new time correction step size.
             time_correction_step = time_shift_average / (int32_t)RESYNC_EVERY;
 
@@ -444,6 +454,7 @@ void setup() {
 
             // After a reset, time shift does not make sense.
             time_shift_ms = 0;
+            time_deviation_ms = 0;
 
         }
 
@@ -456,25 +467,44 @@ void setup() {
             /* 
                 The buffer neds to be big enough to fit all the data.
                 The size of the different data parts:
-                    - Outline:          194
-                    - UUID:             36
-                    - BatteryLevel:     4
-                    - BootNum:          10
-                    - currentMode:      3
-                    - timeShift:        10
-                    - timeShiftAverage: 10
-                    - timeShiftSamples: 10
-                    - syncDuration:     10
-                    - wifiStrength:     4
-                    - timeDeviation:    10
-                Total:                  301
+                    - Outline:              250
+                    - UUID:                 36
+                    - BatteryLevel:         4
+                    - BootNum:              10
+                    - currentMode:          3
+                    - timeShift:            10
+                    - timeShiftAverage:     10
+                    - timeShiftSamples:     10
+                    - syncDuration:         10
+                    - wifiStrength:         4
+                    - timeDeviation:        10
+                    - timeDeviationAverage: 10
+                    - timeDeviationSamples: 10
+                Total:                      377
             */
-            char strf_post_buf[310];
+            char strf_post_buf[380];
 
             // Fill the buffer with the formatted string.
             sprintf(strf_post_buf,
-                "{\"uuid\":\"%s\",\"batteryLevel\":\"%s\",\"bootNum\":\"%d\",\"currentMode\":\"%d\",\"timeShift\":\"%d\",\"timeShiftAverage\":\"%d\",\"timeShiftSamples\":\"%d\",\"syncDuration\":\"%d\",\"wifiStrength\":\"%d\",\"timeDeviation\":\"%d\"}",
-                uuid, strf_battery_value_buf, boot_num, mode, time_shift_ms, time_shift_average, time_shift_samples, (int32_t)time_waiting_ms, wifi_strength, time_deviation_ms);
+                "{"
+                    "\"uuid\":\"%s\","
+                    "\"bootNum\":\"%d\","
+                    "\"currentMode\":\"%d\","
+                    "\"batteryLevel\":\"%s\","
+                    "\"wifiStrength\":\"%d\","
+                    "\"syncDuration\":\"%d\","
+                    "\"timeShift\":\"%d\","
+                    "\"timeShiftAverage\":\"%d\","
+                    "\"timeShiftSamples\":\"%d\","
+                    "\"timeDeviation\":\"%d\","
+                    "\"timeDeviationAverage\":\"%d\","
+                    "\"timeDeviationSamples\":\"%d\""
+                "}",
+                uuid, boot_num, mode, strf_battery_value_buf, wifi_strength,
+                (int32_t)time_waiting_ms,
+                time_shift_ms, time_shift_average, time_shift_samples,
+                time_deviation_ms, time_deviation_average, time_deviation_samples
+            );
 
             // Create an http client.
             HTTPClient http;
