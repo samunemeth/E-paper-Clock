@@ -440,7 +440,8 @@ void setup() {
         if (mode != RESET_MODE) {
 
             // Calculate new average time shift.
-            time_shift_average = (time_shift_ms + (time_shift_average * time_shift_samples)) / (time_shift_samples + (int32_t)1);
+            int32_t time_shift_history_weight = 3; // Just an educated guess at this point!
+            time_shift_average = (time_shift_ms + (time_shift_average * time_shift_history_weight)) / (time_shift_history_weight + (int32_t)1);
             time_shift_samples++;
 
             // Calculate the new time deviation.
