@@ -397,6 +397,7 @@ void setup() {
 
         // Try to make and educated guess of the sync time.
         int64_t time_waiting_ms = 0;
+        bool wifi_timeout_reached = false;
 
         // Set up variable for potential interrupt.
         loop_running = true;
@@ -417,12 +418,32 @@ void setup() {
         configureTimeZone();
         
         // Wait for WiFi to connect, and time to sync.
+        // Check for timeout if WIFI_TIMEOUT_MS is defined and greater than 0
         do {
             getTime();
             vTaskDelay(loop_tick_delay);
             time_waiting_ms += LOOP_WAIT_TIME;
+            
+            #if defined(WIFI_TIMEOUT_MS) && (WIFI_TIMEOUT_MS > 0)
+                if (time_waiting_ms >= WIFI_TIMEOUT_MS) {
+                    wifi_timeout_reached = true;
+                    break;
+                }
+            #endif
+            
         } while (loop_running || (timeinfo.tm_year < 100));
         loop_running = true;
+        
+        // If WiFi timeout was reached, skip the sync operations
+        if (wifi_timeout_reached) {
+            
+            // Turn off WiFi immediately
+            WiFi.mode(WIFI_OFF);
+            
+            // Skip all sync-related operations and jump to normal display
+            goto skipSync;
+            
+        }
         
         // Wait a bit to allow the clock to actually sync.
         vTaskDelay(loop_tick_delay);
@@ -533,7 +554,7 @@ void setup() {
         
         #endif /* !SKIP_SYNC */
 
-        // Set the last sync times
+        // Set the last sync times only if sync was successful
         last_sync_hour = timeinfo.tm_hour;
         last_sync_minute = timeinfo.tm_min;
 
@@ -542,6 +563,9 @@ void setup() {
         sprintf(strf_last_sync_minute_buf, "%02d", last_sync_minute);
 
     }
+
+    // Skip sync label - jumped to when WiFi timeout occurs
+    skipSync:
 
     // Display seconds in the seconds mode.
     if (mode == SECONDS_MODE) {

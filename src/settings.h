@@ -54,6 +54,13 @@
 //#define SKIP_SYNC
 
 /* 
+    WiFi connection timeout in milliseconds.
+    If WiFi connection takes longer than this, the resync will be skipped.
+    Set to 0 to disable timeout (wait indefinitely).
+*/
+#define WIFI_TIMEOUT_MS 30000
+
+/* 
     Report telemetry data to a web server on resync.
     The url to report to can be configured in `wifi_secrets.h`
     This may consume a bit more power, but is really usefull for data logging.

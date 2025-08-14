@@ -76,7 +76,6 @@ If you just want to look at the schematic, you can use the pdf.
   - Show wifi strength at last sync.
   - Multiple WiFi connections.
     *[More Info](https://randomnerdtutorials.com/esp32-wifimulti/)*
-  - Skip resync if the wifi times out.
   - Better fonts, for example *Roboto*.
   - Switch to using precise time.
 
